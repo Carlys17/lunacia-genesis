@@ -1247,6 +1247,8 @@ function renderLB() {
   const pill = rank <= 3
     ? '<span class="rankpill top3">TOP ' + rank + '</span>'
     : '<span class="rankpill gap">+' + (rank - 3) + ' to podium</span>';
+  S.rivalRank = rank;
+  checkAchievements();
   document.getElementById('lbTable').innerHTML =
     '<tr><th>#</th><th>Builder</th><th>Lead class</th><th>Power</th><th>🏆</th><th>Score</th></tr>'
     + rows.map((r, i) => {
