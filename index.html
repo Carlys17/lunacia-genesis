@@ -1408,15 +1408,21 @@ function foePick() {
   const foe = st.foe;
   const aff = PART_SLOTS.map(s => ({ slot: s, card: cardFor(foe, s) })).filter(x => x.card.cost <= st.foeEnergy);
   if (!aff.length) return null;
-  // Greedy AI: prefer best dmgMult attack; sometimes shield/buff when low
+  // Strategic AI: mix of attacks, shields when low HP, random from top-2 dmg choices
   const hpPct = st.foeHp / st.foeMax;
+  // 40% chance to use shield/buff if below 40% HP
   if (hpPct < 0.4 && Math.random() < 0.4) {
     const def = aff.filter(x => x.card.type === 'shield' || x.card.type === 'buff');
-    if (def.length) return def.sort((a, b) => (b.card.shield || b.card.atkBuff || 0) - (a.card.shield || a.card.atkBuff || 0))[0];
+    if (def.length) return def[Math.floor(Math.random() * def.length)];
   }
-  const atks = aff.filter(x => x.card.type === 'atk');
-  if (atks.length) return atks.sort((a, b) => b.card.dmgMult - a.card.dmgMult)[0];
-  return aff.sort((a, b) => (b.card.dmgMult || b.card.shield || b.card.critBoost || 0) - (a.card.dmgMult || a.card.shield || a.card.critBoost || 0))[0];
+  const atks = aff.filter(x => x.card.type === 'atk' || x.card.type === 'crit');
+  if (atks.length) {
+    atks.sort((a, b) => b.card.dmgMult - a.card.dmgMult);
+    // Pick randomly from top-2 choices for variety, not always the absolute best
+    const top = atks.slice(0, Math.min(2, atks.length));
+    return top[Math.floor(Math.random() * top.length)];
+  }
+  return aff[Math.floor(Math.random() * aff.length)];
 }
 function endTurn() {
   const st = S.arena; if (!st) return;
@@ -1449,13 +1455,18 @@ function aiPlay() {
   const aff = PART_SLOTS.map(s => ({ slot: s, card: cardFor(me, s) })).filter(x => x.card.cost <= st.meEnergy);
   if (!aff.length) { st.myTurn = false; st.busy = true; setTimeout(endTurn, 300); return; }
   const hpPct = st.meHp / st.meMax;
+  // 40% shield/buff when low HP
   if (hpPct < 0.4 && Math.random() < 0.4) {
     const def = aff.filter(x => x.card.type === 'shield' || x.card.type === 'buff');
-    if (def.length) { playCard(me.id, def.sort((a, b) => (b.card.shield || b.card.atkBuff || 0) - (a.card.shield || a.card.atkBuff || 0))[0].slot, true); return; }
+    if (def.length) { playCard(me.id, def[Math.floor(Math.random() * def.length)].slot, true); return; }
   }
-  const atks = aff.filter(x => x.card.type === 'atk');
-  if (atks.length) { playCard(me.id, atks.sort((a, b) => b.card.dmgMult - a.card.dmgMult)[0].slot, true); return; }
-  playCard(me.id, aff[0].slot, true);
+  const atks = aff.filter(x => x.card.type === 'atk' || x.card.type === 'crit');
+  if (atks.length) {
+    atks.sort((a, b) => b.card.dmgMult - a.card.dmgMult);
+    const top = atks.slice(0, Math.min(2, atks.length));
+    playCard(me.id, top[Math.floor(Math.random() * top.length)].slot, true); return;
+  }
+  playCard(me.id, aff[Math.floor(Math.random() * aff.length)].slot, true);
 }
 function toggleAuto() {
   const st = S.arena; if (!st) return;
