@@ -761,9 +761,20 @@ const CARD_TYPE = {
   'Panpipe':       { type:'shield',cost:1, shield:12,    name:'Panpipe Hymn' },
   'Cylinder':      { type:'shield',cost:1, shield:15,    name:'Cylinder Guard' },
 };
+function atkPartCount(axie) {
+  let n = 0;
+  for (const s of PART_SLOTS) if (CARD_TYPE[axie.parts[s]] && CARD_TYPE[axie.parts[s]].type === 'atk') n++;
+  return n;
+}
+/* Guarantee every axie can actually fight: if fewer than 2 attack parts, convert
+   non-attack parts into basic strikes so manual combat is always winnable. */
 function cardFor(axie, slot) {
   const pname = axie.parts[slot];
-  return CARD_TYPE[pname] || { type:'atk', cost:1, dmgMult:1.0, name:pname };
+  const base = CARD_TYPE[pname] || { type:'atk', cost:1, dmgMult:1.0, name:pname };
+  if (atkPartCount(axie) < 2 && base.type !== 'atk') {
+    return { type:'atk', cost:1, dmgMult:0.95, name:pname + ' Lash' };
+  }
+  return base;
 }
 const CARD_ICON = { atk:'⚔️', shield:'🛡️', buff:'✨', crit:'🎯' };
 function cardHTML(axie, slot, opts) {
