@@ -1341,12 +1341,12 @@ function renderCombatUI() {
   const next = document.getElementById('arenaNext');
   if (next) next.style.display = st.myTurn ? 'none' : 'inline-block';
 }
-function playCard(axieId, slot) {
+function playCard(axieId, slot, viaAuto) {
   const st = S.arena; if (!st || !st.myTurn || st.busy) return;
   const me = S.axies.find(x => x.id === axieId); if (!me) return;
   const card = cardFor(me, slot);
   if (card.cost > st.meEnergy) return;
-  st.auto = false;
+  if (!viaAuto) st.auto = false;
   st.myTurn = false;
   st.busy = true;
   st.meEnergy -= card.cost;
@@ -1452,11 +1452,11 @@ function aiPlay() {
   const hpPct = st.meHp / st.meMax;
   if (hpPct < 0.4 && Math.random() < 0.4) {
     const def = aff.filter(x => x.card.type === 'shield' || x.card.type === 'buff');
-    if (def.length) { playCard(me.id, def.sort((a, b) => (b.card.shield || b.card.atkBuff || 0) - (a.card.shield || a.card.atkBuff || 0))[0].slot); return; }
+    if (def.length) { playCard(me.id, def.sort((a, b) => (b.card.shield || b.card.atkBuff || 0) - (a.card.shield || a.card.atkBuff || 0))[0].slot, true); return; }
   }
   const atks = aff.filter(x => x.card.type === 'atk');
-  if (atks.length) { playCard(me.id, atks.sort((a, b) => b.card.dmgMult - a.card.dmgMult)[0].slot); return; }
-  playCard(me.id, aff[0].slot);
+  if (atks.length) { playCard(me.id, atks.sort((a, b) => b.card.dmgMult - a.card.dmgMult)[0].slot, true); return; }
+  playCard(me.id, aff[0].slot, true);
 }
 function toggleAuto() {
   const st = S.arena; if (!st) return;
