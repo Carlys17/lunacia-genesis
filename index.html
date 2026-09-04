@@ -1511,6 +1511,7 @@ function endFight() {
   if (st.fightIdx >= 5) { next.textContent = 'Finish'; }
   else { next.textContent = 'Next Fight'; }
   save(); renderAll(); checkAchievements(); renderQuests();
+  if (st.auto && st.fightIdx < 5) setTimeout(arenaNext, 800);
 }
 function makeFoe(me, idx) {
   const cls = pick(CLASS_KEYS);
