@@ -1437,7 +1437,6 @@ function endTurn() {
   st.foeActed = false;
   st.turn++;
   if (st.meHp <= 0 || st.foeHp <= 0) { endFight(); return; }
-  if (st.turn >= 8) { endFight(); return; }
   st.meEnergy = 3; st.foeEnergy = 3;
   st.myTurn = true; st.busy = false;
   renderCombatUI();
