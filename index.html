@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Axie Breeder: Lunacia Genesis</title>
+<style>
+  :root {
+    --bg: #0b1220;
+    --panel: #131c2e;
+    --panel2: #1a2439;
+    --line: #2a3a57;
+    --text: #e8eef7;
+    --muted: #8fa3c0;
+    --accent: #7c5cff;
+    --accent2: #33d17a;
+    --gold: #f5c04e;
+    --danger: #ff5c7a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: radial-gradient(1200px 600px at 50% -200px, #1b2b4d 0%, var(--bg) 60%);
+    color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    min-height: 100vh;
+  }
+  header {
+    display: flex; align-items: center; gap: 16px;
+    padding: 14px 22px;
+    background: rgba(19,28,46,0.85);
+    border-bottom: 1px solid var(--line);
+    position: sticky; top: 0; z-index: 20;
+    flex-wrap: wrap;
+  }
+  .logo { font-weight: 800; font-size: 18px; letter-spacing: 0.5px; }
+  .logo span { color: var(--accent2); }
+  .badge {
+    background: var(--panel2); border: 1px solid var(--line);
+    border-radius: 999px; padding: 5px 12px; font-size: 13px; color: var(--muted);
+  }
+  .badge b { color: var(--gold); }
+  nav { display: flex; gap: 8px; margin-left: auto; }
+  nav button {
+    background: none; border: 1px solid var(--line); color: var(--muted);
+    padding: 7px 14px; border-radius: 8px; cursor: pointer; font-size: 13px;
+  }
+  nav button.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  main { max-width: 1000px; margin: 0 auto; padding: 26px 18px 60px; }
+  h2 { font-size: 20px; margin-bottom: 4px; }
+  .sub { color: var(--muted); font-size: 13px; margin-bottom: 20px; }
+  .card {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 14px; padding: 18px;
+  }
+  /* ---------- breed layout ---------- */
+  .breed-row { display: flex; gap: 14px; align-items: stretch; flex-wrap: wrap; }
+  .parent-card {
+    flex: 1 1 280px; background: var(--panel); border: 1px solid var(--line);
+    border-radius: 14px; padding: 16px; text-align: center; position: relative;
+    border-width: 2px;
+  }
+  .parent-card.slotA { border-color: #578cff; }
+  .parent-card.slotB { border-color: #ff5c7a; }
+  .parent-card .slotlabel { font-size: 11px; letter-spacing: 1.5px; color: var(--muted); text-transform: uppercase; }
+  .parent-card .axname { font-weight: 700; margin: 4px 0 2px; }
+  .parent-card .axclass { font-size: 12px; color: var(--muted); }
+  .parent-card svg { margin: 10px 0; }
+  .statbars { text-align: left; font-size: 12px; }
+  .statrow { display: flex; align-items: center; gap: 8px; margin: 5px 0; }
+  .statrow .lbl { width: 56px; color: var(--muted); }
+  .statrow .bar { flex: 1; height: 8px; background: #0d1626; border-radius: 4px; overflow: hidden; }
+  .statrow .bar i { display: block; height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--accent), var(--accent2)); }
+  .parts-mini { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; margin-top: 10px; }
+  .parts-mini .pt {
+    font-size: 10.5px; background: var(--panel2); border: 1px solid var(--line);
+    padding: 3px 8px; border-radius: 6px; color: var(--muted);
+  }
+  .parts-mini .pt b { color: var(--text); }
+  .xmiddle {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 12px; padding: 10px; min-width: 150px; margin: auto;
+  }
+  .xmiddle .xicon { font-size: 30px; color: var(--muted); }
+  #breedBtn {
+    width: 100%;
+    background: linear-gradient(135deg, var(--accent2), #2ba86a);
+    color: #06220f; font-weight: 800; font-size: 15px;
+    border: none; border-radius: 10px; padding: 13px 18px; cursor: pointer;
+    transition: transform 0.1s, filter 0.2s;
+  }
+  #breedBtn:hover { transform: translateY(-1px); filter: brightness(1.08); }
+  #breedBtn:disabled { filter: grayscale(0.8); cursor: not-allowed; transform: none; }
+  .costnote { font-size: 12px; color: var(--muted); text-align: center; }
+  .costnote b { color: var(--gold); }
+  .warn { color: var(--danger); font-size: 12px; text-align: center; min-height: 16px; }
+  /* ---------- collection ---------- */
+  .sectiontitle { font-size: 15px; font-weight: 700; margin: 26px 0 10px; }
+  #collection { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+  .axmini {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+    padding: 10px; text-align: center; cursor: pointer; position: relative;
+    transition: border-color 0.15s, transform 0.1s;
+  }
+  .axmini:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .axmini.selA { border-color: #578cff; box-shadow: 0 0 0 1px #578cff; }
+  .axmini.selB { border-color: #ff5c7a; box-shadow: 0 0 0 1px #ff5c7a; }
+  .axmini .mname { font-size: 12.5px; font-weight: 700; margin-top: 6px; }
+  .axmini .mmeta { font-size: 11px; color: var(--muted); }
+  .axmini .mtroph { font-size: 11px; color: var(--gold); }
+  .axmini .tagAB {
+    position: absolute; top: 6px; right: 8px; font-size: 10px; font-weight: 800;
+    background: var(--accent); color: #fff; border-radius: 4px; padding: 1px 6px;
+  }
+  .axmini.selA .tagAB { background: #578cff; }
+  .axmini.selB .tagAB { background: #ff5c7a; }
+  .tip { font-size: 12px; color: var(--muted); margin-top: 8px; }
+  /* ---------- modal ---------- */
+  .modalbg {
+    display: none; position: fixed; inset: 0; background: rgba(4,8,16,0.8);
+    z-index: 50; align-items: center; justify-content: center; padding: 16px;
+  }
+  .modalbg.open { display: flex; }
+  .modal {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 16px;
+    max-width: 620px; width: 100%; padding: 24px; max-height: 92vh; overflow-y: auto;
+  }
+  .modal h3 { margin-bottom: 6px; font-size: 18px; }
+  .dna-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 18px 0; }
+  .dnarow {
+    background: var(--panel2); border: 1px solid var(--line); border-radius: 8px;
+    padding: 8px 10px; font-size: 12px; display: flex; justify-content: space-between; align-items: center;
+  }
+  .dnarow .slot { color: var(--muted); text-transform: uppercase; font-size: 10px; letter-spacing: 1px; }
+  .dnarow .val { font-weight: 700; }
+  .dnarow.locked { border-color: var(--accent2); }
+  .dnarow.rolling .val { color: var(--accent); animation: blink 0.35s infinite alternate; }
+  @keyframes blink { to { opacity: 0.35; } }
+  .center { text-align: center; }
+  .btnrow { display: flex; gap: 10px; margin-top: 18px; }
+  .btnrow button {
+    flex: 1; padding: 12px; border-radius: 10px; border: none; cursor: pointer;
+    font-weight: 700; font-size: 14px;
+  }
+  .b-primary { background: linear-gradient(135deg, var(--accent), #5a3ee0); color: #fff; }
+  .b-secondary { background: var(--panel2); color: var(--text); border: 1px solid var(--line) !important; }
+  /* ---------- arena ---------- */
+  .vsrow {
+    display: flex; align-items: center; gap: 14px; justify-content: center;
+    margin: 14px 0;
+  }
+  .fightlog {
+    background: #0d1626; border: 1px solid var(--line); border-radius: 10px;
+    padding: 12px; font-family: ui-monospace, Menlo, monospace; font-size: 12.5px;
+    max-height: 220px; overflow-y: auto; line-height: 1.7;
+  }
+  .fightlog .win { color: var(--accent2); }
+  .fightlog .lose { color: var(--danger); }
+  .fightlog .hit { color: var(--gold); }
+  /* ---------- leaderboard ---------- */
+  table.lb { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  table.lb th { text-align: left; color: var(--muted); font-weight: 600; padding: 8px 10px; border-bottom: 1px solid var(--line); font-size: 12px; }
+  table.lb td { padding: 9px 10px; border-bottom: 1px solid #1c2942; }
+  table.lb tr.top td { background: rgba(124,92,255,0.08); }
+  .pwr { font-weight: 800; color: var(--gold); }
+  /* ---------- guide ---------- */
+  .guide h4 { margin: 16px 0 6px; }
+  .guide p, .guide li { color: var(--muted); font-size: 13.5px; line-height: 1.65; }
+  .guide ol, .guide ul { padding-left: 22px; }
+  .guide b { color: var(--text); }
+  .genechance {
+    display: flex; gap: 8px; margin: 10px 0; flex-wrap: wrap;
+  }
+  .genechance div {
+    background: var(--panel2); border: 1px solid var(--line); border-radius: 8px;
+    padding: 8px 12px; font-size: 12px; text-align: center; flex: 1;
+  }
+  .genechance b { display: block; font-size: 16px; margin-bottom: 2px; }
+  footer { text-align: center; color: #5d7191; font-size: 11.5px; padding: 18px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Axie Breeder<span>: Lunacia Genesis</span></div>
+  <div class="badge">SLP <b id="slpBadge">1000</b></div>
+  <div class="badge">Breds <b id="breedBadge">0</b></div>
+  <nav>
+    <button id="tabBreed" class="active" onclick="switchTab('breed')">Breed Lab</button>
+    <button id="tabLb" onclick="switchTab('lb')">Leaderboard</button>
+    <button id="tabGuide" onclick="switchTab('guide')">How to Play</button>
+  </nav>
+</header>
+
+<main>
+  <!-- ============ BREED LAB ============ -->
+  <section id="view-breed">
+    <h2>Breed Lab</h2>
+    <p class="sub">Pick two Axies from your collection, roll their genes, and forge champions for the Arena. Siblings can never breed — plan your bloodlines.</p>
+
+    <div class="breed-row">
+      <div class="parent-card slotA" id="parentCardA"></div>
+      <div class="xmiddle">
+        <div class="xicon">✕</div>
+        <button id="breedBtn" onclick="doBreed()">BREED</button>
+        <div class="costnote">Cost: <b id="costNote">200</b> SLP</div>
+        <div class="warn" id="breedWarn"></div>
+      </div>
+      <div class="parent-card slotB" id="parentCardB"></div>
+    </div>
+
+    <div class="sectiontitle">Your Collection — click an Axie to load Slot A, click again for Slot B</div>
+    <div id="collection"></div>
+    <p class="tip">Earn SLP in the Arena to fund more breeds. Each Axie's breed cost rises the more times it has bred (200 → 300 → 500 → 800 → 1300...), just like Lunacia's real bloodline laws.</p>
+  </section>
+
+  <!-- ============ LEADERBOARD ============ -->
+  <section id="view-lb" style="display:none">
+    <h2>Arena Leaderboard</h2>
+    <p class="sub">Your strongest bred champions ranked by trophies and power. Bred-in-Lunacia only.</p>
+    <div class="card"><table class="lb" id="lbTable"></table></div>
+  </section>
+
+  <!-- ============ GUIDE ============ -->
+  <section id="view-guide" style="display:none" class="card guide">
+    <h2>How to Play</h2>
+    <h4>First play</h4>
+    <ol>
+      <li>You start with <b>2 starter Axies</b> and <b>1000 SLP</b>.</li>
+      <li>Click an Axie in your collection → loads into <b>Slot A</b>. Click another → <b>Slot B</b>. Clicking the same Axie twice cycles its slot.</li>
+      <li>Press <b>BREED</b> and watch the gene roll. Costs SLP.</li>
+      <li>The newborn joins your collection — then <b>Send to Arena</b> to fight 5 opponents and win trophies + SLP.</li>
+      <li>Rinse, repeat, climb the leaderboard. Bred Axies with <b>pure matching parts</b> (same class) are stronger in the Arena.</li>
+    </ol>
+    <h4>Genetics rules</h4>
+    <div class="genechance">
+      <div><b>70%</b>dominant gene (d1) from a random parent</div>
+      <div><b>30%</b>recessive gene (d2) surfaces</div>
+      <div><b>3%</b>mutation: a brand-new part appears</div>
+    </div>
+    <ul>
+      <li>Offspring class: 50% from either parent.</li>
+      <li><b>Siblings can never breed</b> — two Axies sharing a parent are bloodline-blocked.</li>
+      <li>Each Axie's breed cost grows with its own breed count.</li>
+      <li>Stats (HP, Speed, Skill, Morale) average the parents with natural variance.</li>
+    </ul>
+    <h4>Arena</h4>
+    <p>Auto-battle vs 5 procedurally generated challengers. Higher <b>Speed</b> strikes first each round, <b>Skill</b> boosts damage, <b>Morale</b> adds crits, <b>HP</b> keeps you standing. Each win: <b>+3 trophies, +15 SLP</b>.</p>
+    <h4>Goal</h4>
+    <p>Breed the highest-power champion, stack trophies, and claim the top of the Lunacia Genesis leaderboard.</p>
+  </section>
+</main>
+
+<!-- ============ DNA ROLL MODAL ============ -->
+<div class="modalbg" id="dnaModalBg">
+  <div class="modal center">
+    <h3>🧬 Gene Roll</h3>
+    <p class="sub">Chromosomes are shuffling...</p>
+    <div class="dna-grid" id="dnaGrid"></div>
+    <div class="sub" id="dnaStatus">Rolling genes...</div>
+  </div>
+</div>
+
+<!-- ============ RESULT MODAL ============ -->
+<div class="modalbg" id="resultModalBg">
+  <div class="modal center">
+    <h3 id="resultTitle">A new Axie is born!</h3>
+    <div id="resultBody"></div>
+    <div class="btnrow">
+      <button class="b-secondary" onclick="closeResult()">Keep Later</button>
+      <button class="b-primary" onclick="sendToArena()">⚔ Send to Arena</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ ARENA MODAL ============ -->
+<div class="modalbg" id="arenaModalBg">
+  <div class="modal">
+    <h3 class="center">⚔ Arena Gauntlet</h3>
+    <p class="sub center" id="arenaSub"></p>
+    <div class="fightlog" id="fightLog"></div>
+    <div class="btnrow">
+      <button class="b-secondary" onclick="closeArena()">Leave</button>
+      <button class="b-primary" id="arenaNext" onclick="arenaNext()">Next Fight</button>
+    </div>
+  </div>
+</div>
+
+<footer>Axie Breeder: Lunacia Genesis — Vibeathon 2026 prototype. Fan-made, AI-vibe-coded. Axie Infinity is a trademark of Sky Mavis.</footer>
+
+<script>
+'use strict';
+
+/* ================= DATA ================= */
+const CLASSES = {
+  beast:    { name:'Beast',    color:'#f59e0b', stats:{hp:61, speed:61, skill:41, morale:41} },
+  bug:      { name:'Bug',      color:'#84cc16', stats:{hp:67, speed:55, skill:41, morale:41} },
+  bird:     { name:'Bird',     color:'#ec4899', stats:{hp:55, speed:61, skill:41, morale:47} },
+  plant:    { name:'Plant',    color:'#22c55e', stats:{hp:61, speed:41, skill:41, morale:61} },
+  aquatic:  { name:'Aquatic',  color:'#3b82f6', stats:{hp:61, speed:55, skill:41, morale:47} },
+  reptile:  { name:'Reptile',  color:'#a855f7', stats:{hp:55, speed:61, skill:41, morale:47} },
+  dusk:     { name:'Dusk',     color:'#475569', stats:{hp:67, speed:55, skill:47, morale:41} },
+  dawn:     { name:'Dawn',     color:'#22d3ee', stats:{hp:55, speed:67, skill:41, morale:41} },
+  mech:     { name:'Mech',     color:'#94a3b8', stats:{hp:61, speed:61, skill:41, morale:47} },
+};
+const CLASS_KEYS = Object.keys(CLASSES);
+
+const PART_SLOTS = ['eyes','ears','mouth','horn','back','tail'];
+const PART_POOL = {
+  eyes:  [['Puppy','beast'],['Innocent Lamb','plant'],['Papi','bug'],['Rainbowfish','aquatic'],['Hornbill','bird'],['Compact Scope','mech'],['DreamyMascot','dusk'],['Guraffe','reptile'],['Retro Fetch','dawn']],
+  ears:  [['Foxtail','beast'],['Nutcracker','bug'],['Bird Ear','bird'],['Snailshell','aquatic'],['Papilon','plant'],['Hummingwing','dawn'],['Mecha Horn','mech'],['Little Sage','dusk'],['Yasune','reptile']],
+  mouth: [['Papi','bug'],['Tiny Turtle','reptile'],['Herbert','plant'],['Guppy','aquatic'],['Spiraling Carpo','aquatic'],['Russell','beast'],['Doubletalk','bird'],['Piggy','plant'],['Nimo','dawn']],
+  horn:  [['Single Hornnut','beast'],['Coral Digger','aquatic'],['Beechnut','plant'],['Mystic Flower','plant'],['Origami','bird'],['Dual Blade','mech'],['Scaly Spear','reptile'],['Cuckoo','dusk'],['Water Pulse','dawn']],
+  back:  [['Goldfish','aquatic'],['Anemone','aquatic'],['Rose Bud','plant'],['Lil Leaf','plant'],['Beech Stake','bug'],['Jaguar Paw','beast'],['Feather Spear','bird'],['Hermit Crab','dusk'],['Mecha Shell','mech']],
+  tail:  [['Shrimp','aquatic'],['Fish Hook','aquatic'],['Gecko','reptile'],['Jaguar','beast'],['Yamato','beast'],['Swallow','bird'],['Raspberry','plant'],['Panpipe','plant'],['Turbine','mech']],
+};
+
+const NAME_A = ['Lu','Axa','Mo','Zi','Ki','Pip','Nia','Ter','Vex','Sol','Ny','Gala','Bram','Yuki'];
+const NAME_B = ['naci','mo','ra','li','ppo','ka','shi','to','nny','ma','lo','chi','ba'];
+const NAME_C = ['of Lunacia','the Bold','Prime','II','III','IV','Dawnborn','Duskwalker','the Pure','Rex','Nova','Mk-II'];
+
+const BREED_COSTS = [200, 300, 500, 800, 1300, 2100, 3400, 5500, 8900];
+
+/* ================= STATE ================= */
+let S = { slp: 1000, axies: [], nextId: 1, slotA: null, slotB: null, arena: null };
+
+function save() { try { localStorage.setItem('lunaciaGenesis', JSON.stringify(S)); } catch(e){} }
+function load() {
+  try {
+    const raw = localStorage.getItem('lunaciaGenesis');
+    if (raw) { S = JSON.parse(raw); if (S.axies && S.axies.length) return; }
+  } catch(e){}
+  seedCollection();
+}
+function seedCollection() {
+  S.slp = 1000;
+  S.axies = [ randomAxie('Starter'), randomAxie('Starter') ];
+  S.slotA = S.axies[0].id; S.slotB = S.axies[1].id;
+}
+
+/* ================= AXIE GEN ================= */
+function randPart(slot) { return PART_POOL[slot][Math.floor(Math.random()*PART_POOL[slot].length)]; }
+function randomAxie(tag) {
+  const cls = CLASS_KEYS[Math.floor(Math.random()*CLASS_KEYS.length)];
+  const parts = {}, genes = {};
+  for (const slot of PART_SLOTS) {
+    const p = randPart(slot);
+    const hidden = randPart(slot);
+    parts[slot] = p[0];
+    genes[slot] = { d1: p[0], d2: hidden[0] };
+  }
+  const base = CLASSES[cls].stats;
+  const stats = {
+    hp: Math.round(base.hp + (Math.random()*14-7)),
+    speed: Math.round(base.speed + (Math.random()*14-7)),
+    skill: Math.round(base.skill + (Math.random()*14-7)),
+    morale: Math.round(base.morale + (Math.random()*14-7)),
+  };
+  return {
+    id: S.nextId++,
+    name: genName(),
+    class: cls,
+    parts, genes, stats,
+    breedCount: 0,
+    parents: tag === 'Starter' ? [] : [0,0],
+    trophies: 0,
+    born: Date.now(),
+  };
+}
+function genName() {
+  return NAME_A[Math.floor(Math.random()*NAME_A.length)]
+       + NAME_B[Math.floor(Math.random()*NAME_B.length)]
+       + (Math.random()<0.35 ? ' ' + NAME_C[Math.floor(Math.random()*NAME_C.length)] : '');
+}
+
+function partClass(slot, partName) {
+  const e = PART_POOL[slot].find(p => p[0] === partName);
+  return e ? e[1] : 'beast';
+}
+function axiePower(a) {
+  const s = a.stats;
+  let p = s.hp + s.speed + s.skill + s.morale;
+  for (const slot of PART_SLOTS) if (partClass(slot, a.parts[slot]) === a.class) p += 6;
+  return p;
+}
+
+/* ================= BREEDING ================= */
+function breedCost(ax) {
+  return BREED_COSTS[Math.min(ax.breedCount, BREED_COSTS.length-1)];
+}
+function pairCost(a, b) { return breedCost(a) + breedCost(b); }
+function areSiblings(a, b) {
+  if (!a.parents.length || !b.parents.length) return false;
+  return a.parents.some(p => p && b.parents.includes(p));
+}
+function canBreed(a, b) {
+  if (!a || !b || a.id === b.id) return { ok:false, why:'Pick two different Axies.' };
+  if (areSiblings(a, b)) return { ok:false, why:'Bloodline blocked: siblings can never breed.' };
+  const c = pairCost(a,b);
+  if (c > S.slp) return { ok:false, why:'Not enough SLP — win Arena fights to earn more (' + c + ' needed).' };
+  return { ok:true };
+}
+
+function breed(a, b) {
+  const child = {};
+  const cls = Math.random() < 0.5 ? a.class : b.class;
+  const parts = {}, genes = {};
+  for (const slot of PART_SLOTS) {
+    const donor = Math.random() < 0.5 ? a : b;
+    const useD1 = Math.random() < 0.7;
+    let chosen = useD1 ? donor.genes[slot].d1 : donor.genes[slot].d2;
+    if (Math.random() < 0.03) chosen = randPart(slot)[0]; // mutation
+    parts[slot] = chosen;
+    const hiddenDonor = Math.random() < 0.5 ? a : b;
+    genes[slot] = { d1: chosen, d2: hiddenDonor.genes[slot].d2 };
+  }
+  const avg = k => Math.round((a.stats[k] + b.stats[k]) / 2 + (Math.random()*12-6));
+  const stats = { hp: avg('hp'), speed: avg('speed'), skill: avg('skill'), morale: avg('morale') };
+  a.breedCount++; b.breedCount++;
+  return {
+    id: S.nextId++,
+    name: genName(),
+    class: cls, parts, genes, stats,
+    breedCount: 0, parents: [a.id, b.id],
+    trophies: 0, born: Date.now(),
+  };
+}
+
+/* ================= ARENA ================= */
+function challenger(power) {
+  const cls = CLASS_KEYS[Math.floor(Math.random()*CLASS_KEYS.length)];
+  const base = CLASSES[cls].stats;
+  const jitter = () => Math.random()*30-15;
+  const stats = {
+    hp: Math.round(base.hp + 18 + jitter()),
+    speed: Math.round(base.speed + 18 + jitter()),
+    skill: Math.round(base.skill + 18 + jitter()),
+    morale: Math.round(base.morale + 18 + jitter()),
+  };
+  return { name: 'Wild ' + genName(), class: cls, stats };
+}
+
+function fightSim(me, foe) {
+  const lines = [];
+  let meHp = me.stats.hp * 6, foeHp = foe.stats.hp * 6;
+  const order = me.stats.speed >= foe.stats.speed ? [me,foe] : [foe,me];
+  let turn = 1;
+  while (meHp > 0 && foeHp > 0 && turn <= 12) {
+    for (const atk of order) {
+      if (meHp <= 0 || foeHp <= 0) break;
+      const isMe = atk === me;
+      const target = isMe ? foe : me;
+      let dmg = (atk.stats.skill * 0.9 + 8) * (0.8 + Math.random()*0.5);
+      const crit = Math.random() < atk.stats.morale/220;
+      if (crit) dmg *= 1.7;
+      dmg = Math.round(dmg);
+      if (isMe) { foeHp -= dmg; lines.push({t:'me', txt:`T${turn} ${me.name} strikes ${foe.name} for ${dmg}${crit ? ' CRITICAL!' : ''}`}); }
+      else { meHp -= dmg; lines.push({t:'foe', txt:`T${turn} ${foe.name} hits ${me.name} for ${dmg}${crit ? ' CRITICAL!' : ''}`}); }
+    }
+    turn++;
+  }
+  const win = foeHp <= 0 && meHp > 0;
+  return { win, lines };
+}
+
+function arenaOpponentPower(myPower, idx) { return myPower - 20 + idx * 14; }
+
+/* ================= AVATAR SVG ================= */
+function eyeShape(kind) {
+  switch (kind) {
+    case 'Puppy': return `<circle cx="14" cy="8" r="7" fill="#fff"/><circle cx="14" cy="9" r="3.4" fill="#101418"/><circle cx="46" cy="8" r="7" fill="#fff"/><circle cx="46" cy="9" r="3.4" fill="#101418"/>`;
+    case 'Innocent Lamb': return `<ellipse cx="14" cy="8" rx="8" ry="9" fill="#fff"/><circle cx="14" cy="8" r="2.8" fill="#101418"/><ellipse cx="46" cy="8" rx="8" ry="9" fill="#fff"/><circle cx="46" cy="8" r="2.8" fill="#101418"/>`;
+    case 'Papi': return `<path d="M6 8 Q14 0 22 8 Q14 14 6 8Z" fill="#fff"/><circle cx="14" cy="7.5" r="2.4" fill="#101418"/><path d="M38 8 Q46 0 54 8 Q46 14 38 8Z" fill="#fff"/><circle cx="46" cy="7.5" r="2.4" fill="#101418"/>`;
+    case 'Rainbowfish': return `<circle cx="14" cy="8" r="6.5" fill="#7dd3fc"/><circle cx="14" cy="8" r="3" fill="#101418"/><circle cx="46" cy="8" r="6.5" fill="#7dd3fc"/><circle cx="46" cy="8" r="3" fill="#101418"/>`;
+    case 'Hornbill': return `<rect x="9" y="4" width="10" height="8" rx="3" fill="#fff"/><circle cx="14" cy="8" r="2.6" fill="#101418"/><rect x="41" y="4" width="10" height="8" rx="3" fill="#fff"/><circle cx="46" cy="8" r="2.6" fill="#101418"/>`;
+    default: return `<circle cx="14" cy="8" r="6" fill="#fff"/><circle cx="14" cy="8" r="2.8" fill="#101418"/><circle cx="46" cy="8" r="6" fill="#fff"/><circle cx="46" cy="8" r="2.8" fill="#101418"/>`;
+  }
+}
+function hornShape(kind, color) {
+  switch (kind) {
+    case 'Single Hornnut': return `<path d="M30 12 L26 0 L34 0 Z" fill="${color}"/>`;
+    case 'Coral Digger': return `<path d="M30 12 L24 -2 L30 2 L36 -2 Z" fill="${color}"/>`;
+    case 'Beechnut': return `<circle cx="30" cy="4" r="5" fill="${color}"/>`;
+    case 'Mystic Flower': return `<circle cx="30" cy="4" r="4" fill="#f9a8d4"/><circle cx="30" cy="4" r="1.6" fill="#fde68a"/>`;
+    case 'Origami': return `<path d="M30 12 L22 2 L38 2 Z" fill="${color}"/>`;
+    default: return `<path d="M30 12 L25 0 L35 0 Z" fill="${color}" opacity="0.85"/>`;
+  }
+}
+function earShape(kind, color) {
+  switch (kind) {
+    case 'Foxtail': return `<path d="M8 24 Q0 14 6 6 L12 20Z" fill="${color}"/><path d="M52 24 Q60 14 54 6 L48 20Z" fill="${color}"/>`;
+    case 'Bird Ear': return `<path d="M8 26 Q2 18 8 12 L12 24Z" fill="${color}"/><path d="M52 26 Q58 18 52 12 L48 24Z" fill="${color}"/>`;
+    default: return `<circle cx="7" cy="22" r="6" fill="${color}" opacity="0.7"/><circle cx="53" cy="22" r="6" fill="${color}" opacity="0.7"/>`;
+  }
+}
+function tailShape(kind, color) {
+  switch (kind) {
+    case 'Shrimp': return `<path d="M60 40 Q74 38 72 28 Q70 20 62 24" fill="none" stroke="${color}" stroke-width="7" stroke-linecap="round"/>`;
+    case 'Fish Hook': return `<path d="M60 42 Q78 42 74 30" fill="none" stroke="${color}" stroke-width="6" stroke-linecap="round"/>`;
+    case 'Jaguar': return `<path d="M60 44 Q76 48 72 60" fill="none" stroke="${color}" stroke-width="9" stroke-linecap="round"/>`;
+    default: return `<path d="M60 42 Q75 44 70 30" fill="none" stroke="${color}" stroke-width="7" stroke-linecap="round"/>`;
+  }
+}
+function backShape(kind, color) {
+  switch (kind) {
+    case 'Goldfish': return `<circle cx="18" cy="52" r="7" fill="${color}" opacity="0.85"/><circle cx="42" cy="52" r="7" fill="${color}" opacity="0.85"/>`;
+    case 'Rose Bud': return `<circle cx="30" cy="54" r="8" fill="#f472b6"/>`;
+    case 'Lil Leaf': return `<ellipse cx="30" cy="54" rx="9" ry="4" fill="${color}"/>`;
+    default: return `<path d="M22 50 L26 40 L30 50Z M34 50 L38 40 L42 50Z" fill="${color}" opacity="0.8"/>`;
+  }
+}
+function axieSVG(a, size) {
+  const c = CLASSES[a.class].color;
+  const dark = 'rgba(0,0,0,0.25)';
+  return `<svg width="${size}" height="${size}" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+    ${earShape(a.parts.ears, c)}
+    ${backShape(a.parts.back, c)}
+    <ellipse cx="30" cy="40" rx="26" ry="24" fill="${c}" stroke="${dark}" stroke-width="2"/>
+    <ellipse cx="30" cy="52" rx="16" ry="10" fill="rgba(255,255,255,0.14)"/>
+    ${hornShape(a.parts.horn, c)}
+    ${eyeShape(a.parts.eyes)}
+    <path d="M22 22 Q30 28 38 22" fill="none" stroke="rgba(0,0,0,0.35)" stroke-width="2" stroke-linecap="round"/>
+    ${a.parts.mouth === 'Papi' ? `<path d="M24 18 Q30 24 36 18" fill="none" stroke="#0e7490" stroke-width="3" stroke-linecap="round"/>` : `<path d="M25 20 Q30 26 35 20" fill="none" stroke="rgba(0,0,0,0.4)" stroke-width="2" stroke-linecap="round"/>`}
+    <circle cx="6" cy="66" r="4" fill="${c}" opacity="0.5"/><circle cx="54" cy="66" r="4" fill="${c}" opacity="0.5"/>
+    ${tailShape(a.parts.tail, c)}
+  </svg>`;
+}
+
+/* ================= RENDER ================= */
+function fmtAxie(a) { return axieSVG(a, 110); }
+
+function renderParent(slot) {
+  const el = slot === 'A' ? document.getElementById('parentCardA') : document.getElementById('parentCardB');
+  const id = slot === 'A' ? S.slotA : S.slotB;
+  const a = S.axies.find(x => x.id === id);
+  if (!a) {
+    el.innerHTML = `<div class="slotlabel">Slot ${slot}</div><p class="sub" style="padding:30px 0">Select an Axie from your collection</p>`;
+    return;
+  }
+  const c = CLASSES[a.class];
+  const bars = ['hp','speed','skill','morale'].map(k =>
+    `<div class="statrow"><div class="lbl">${k.toUpperCase()}</div><div class="bar"><i style="width:${Math.min(100, a.stats[k])}%"></i></div></div>`
+  ).join('');
+  const pts = PART_SLOTS.map(s => `<span class="pt"><b>${a.parts[s]}</b>·${c2s(partClass(s, a.parts[s]))}</span>`).join('');
+  el.innerHTML = `
+    <div class="slotlabel">Slot ${slot}</div>
+    <div class="axname">${a.name}</div>
+    <div class="axclass" style="color:${c.color}">${c.name} · Power ${axiePower(a)}</div>
+    ${fmtAxie(a)}
+    <div class="statbars">${bars}</div>
+    <div class="parts-mini">${pts}</div>`;
+}
+function c2s(cls) { return cls.slice(0,3).toUpperCase(); }
+
+function renderCollection() {
+  const el = document.getElementById('collection');
+  el.innerHTML = S.axies.map(a => `
+    <div class="axmini ${a.id===S.slotA?'selA':''} ${a.id===S.slotB?'selB':''}" onclick="pickAxie(${a.id})">
+      ${a.id===S.slotA?'<span class="tagAB">A</span>':''}${a.id===S.slotB?'<span class="tagAB">B</span>':''}
+      ${axieSVG(a, 90)}
+      <div class="mname">${a.name}</div>
+      <div class="mmeta" style="color:${CLASSES[a.class].color}">${CLASSES[a.class].name} · PWR ${axiePower(a)}</div>
+      <div class="mtroph">🏆 ${a.trophies} · breds ${a.breedCount}</div>
+    </div>`).join('');
+}
+function renderBreedUI() {
+  const a = S.axies.find(x => x.id === S.slotA);
+  const b = S.axies.find(x => x.id === S.slotB);
+  const cost = (a && b) ? pairCost(a,b) : 200;
+  document.getElementById('costNote').textContent = cost;
+  const chk = canBreed(a, b);
+  document.getElementById('breedBtn').disabled = !chk.ok;
+  document.getElementById('breedWarn').textContent = chk.ok ? '' : chk.why;
+  document.getElementById('slpBadge').textContent = S.slp;
+  document.getElementById('breedBadge').textContent = S.axies.reduce((n,x)=>n+x.breedCount,0);
+}
+function renderAll() { renderParent('A'); renderParent('B'); renderCollection(); renderBreedUI(); }
+
+function pickAxie(id) {
+  if (S.slotA === id) { S.slotA = null; }
+  else if (S.slotB === id) { S.slotB = null; }
+  else if (!S.slotA) { S.slotA = id; }
+  else if (!S.slotB) { S.slotB = id; }
+  else { S.slotB = id; }
+  save(); renderAll();
+}
+
+/* ================= LEADERBOARD ================= */
+function renderLB() {
+  const rows = [...S.axies].filter(a => a.parents.length).sort((x,y) => y.trophies - x.trophies || axiePower(y) - axiePower(x)).slice(0, 12);
+  document.getElementById('lbTable').innerHTML = `
+    <tr><th>#</th><th>Axie</th><th>Class</th><th>Power</th><th>Best Stat</th><th>🏆 Trophies</th></tr>
+    ${rows.map((a,i) => `
+      <tr class="${i<3?'top':''}">
+        <td>${i+1}</td>
+        <td><b>${a.name}</b></td>
+        <td style="color:${CLASSES[a.class].color}">${CLASSES[a.class].name}</td>
+        <td class="pwr">${axiePower(a)}</td>
+        <td>${bestStat(a)}</td>
+        <td>🏆 ${a.trophies}</td>
+      </tr>`).join('')}`;
+}
+function bestStat(a) {
+  const e = Object.entries(a.stats).sort((x,y)=>y[1]-x[1])[0];
+  return e[0].toUpperCase() + ' ' + e[1];
+}
+
+/* ================= FLOW ================= */
+let pendingChild = null;
+
+function doBreed() {
+  const a = S.axies.find(x => x.id === S.slotA);
+  const b = S.axies.find(x => x.id === S.slotB);
+  const chk = canBreed(a, b);
+  if (!chk.ok) return;
+  const child = breed(a, b);
+  pendingChild = child;
+  S.slp -= pairCost(a, b);
+  save();
+  rollAnimation(child);
+}
+
+function rollAnimation(child) {
+  const bg = document.getElementById('dnaModalBg');
+  const grid = document.getElementById('dnaGrid');
+  grid.innerHTML = PART_SLOTS.map(s => `<div class="dnarow rolling" id="dna-${s}"><span class="slot">${s}</span><span class="val">...</span></div>`).join('');
+  document.getElementById('dnaStatus').textContent = 'Rolling genes...';
+  bg.classList.add('open');
+  PART_SLOTS.forEach((slot, i) => {
+    const el = document.getElementById('dna-' + slot);
+    const spin = setInterval(() => {
+      el.querySelector('.val').textContent = randPart(slot)[0];
+    }, 90);
+    setTimeout(() => {
+      clearInterval(spin);
+      el.classList.remove('rolling'); el.classList.add('locked');
+      el.querySelector('.val').textContent = child.parts[slot];
+    }, 700 + i * 480);
+  });
+  setTimeout(() => {
+    document.getElementById('dnaStatus').innerHTML = `<b style="color:var(--accent2)">${child.name}</b> the ${CLASSES[child.class].name} is born!`;
+  }, 700 + PART_SLOTS.length * 480 + 300);
+  setTimeout(() => {
+    bg.classList.remove('open');
+    showResult(child);
+  }, 700 + PART_SLOTS.length * 480 + 1400);
+}
+
+function showResult(child) {
+  const c = CLASSES[child.class];
+  const bars = ['hp','speed','skill','morale'].map(k =>
+    `<div class="statrow"><div class="lbl">${k.toUpperCase()}</div><div class="bar"><i style="width:${Math.min(100, child.stats[k])}%"></i></div></div>`
+  ).join('');
+  const pts = PART_SLOTS.map(s => `<span class="pt"><b>${child.parts[s]}</b>${partClass(s, child.parts[s])===child.class?' ✦':''}</span>`).join('');
+  document.getElementById('resultTitle').innerHTML = `${child.name} <span style="color:${c.color}">· ${c.name}</span>`;
+  document.getElementById('resultBody').innerHTML = `
+    ${fmtAxie(child)}
+    <div class="statbars" style="max-width:320px;margin:10px auto">${bars}</div>
+    <div class="parts-mini">${pts}</div>
+    <p class="sub" style="margin-top:12px">Power <b class="pwr">${axiePower(child)}</b> · ✦ = part matches class (+6 power each)</p>`;
+  document.getElementById('resultModalBg').classList.add('open');
+  S.axies.push(child);
+  S.slotB = child.id; // conveniently placed for next pairing
+  save(); renderAll();
+}
+function closeResult() { document.getElementById('resultModalBg').classList.remove('open'); }
+
+/* ================= ARENA FLOW ================= */
+function sendToArena() {
+  if (!pendingChild) return;
+  closeResult();
+  S.arena = { axieId: pendingChild.id, fightIdx: 0, wins: 0, busy: false };
+  pendingChild = null;
+  document.getElementById('arenaModalBg').classList.add('open');
+  runFight();
+}
+function closeArena() {
+  document.getElementById('arenaModalBg').classList.remove('open');
+  S.arena = null; save(); renderAll(); renderLB();
+}
+function arenaNext() {
+  if (!S.arena || S.arena.busy) return;
+  if (S.arena.fightIdx >= 5) { closeArena(); return; }
+  runFight();
+}
+function runFight() {
+  const st = S.arena;
+  if (!st) return;
+  st.busy = true;
+  const me = S.axies.find(x => x.id === st.axieId);
+  if (!me) { closeArena(); return; }
+  if (st.fightIdx >= 5) {
+    document.getElementById('arenaSub').innerHTML = `Gauntlet complete: <b>${st.wins}/5 wins</b> — 🏆 ${me.trophies} total`;
+    document.getElementById('fightLog').innerHTML += `<div class="win">— GAUNTLET OVER —</div>`;
+    document.getElementById('arenaNext').textContent = 'Done';
+    st.busy = false; save(); renderAll(); renderLB();
+    return;
+  }
+  document.getElementById('arenaNext').textContent = 'Skip';
+  const foe = challenger(arenaOpponentPower(axiePower(me), st.fightIdx));
+  document.getElementById('arenaSub').innerHTML = `Fight ${st.fightIdx+1}/5 · ${me.name} <b style="color:${CLASSES[me.class].color}">PWR ${axiePower(me)}</b> vs ${foe.name} (${CLASSES[foe.class].name})`;
+  const log = document.getElementById('fightLog');
+  log.innerHTML = '';
+  const res = fightSim(me, foe);
+  res.lines.forEach((l, i) => {
+    setTimeout(() => {
+      const div = document.createElement('div');
+      div.className = l.t === 'me' ? 'hit' : '';
+      div.textContent = l.txt;
+      log.appendChild(div); log.scrollTop = log.scrollHeight;
+    }, i * 380);
+  });
+  setTimeout(() => {
+    const div = document.createElement('div');
+    if (res.win) {
+      me.trophies += 3; S.slp += 15; st.wins++;
+      div.className = 'win'; div.textContent = `✅ ${me.name} WINS! +3 trophies, +15 SLP`;
+    } else {
+      div.className = 'lose'; div.textContent = `❌ ${foe.name} wins this one. No trophies lost.`;
+    }
+    log.appendChild(div); log.scrollTop = log.scrollHeight;
+    st.fightIdx++;
+    document.getElementById('arenaNext').textContent = st.fightIdx >= 5 ? 'Finish' : 'Next Fight';
+    st.busy = false; save(); renderAll();
+  }, res.lines.length * 380 + 500);
+}
+
+/* ================= TABS ================= */
+function switchTab(t) {
+  for (const v of ['breed','lb','guide']) document.getElementById('view-' + v).style.display = 'none';
+  for (const b of ['tabBreed','tabLb','tabGuide']) document.getElementById(b).classList.remove('active');
+  document.getElementById('view-' + t).style.display = 'block';
+  document.getElementById('tab' + (t==='lb'?'Lb':t==='guide'?'Guide':'Breed')).classList.add('active');
+  if (t === 'lb') renderLB();
+}
+
+/* ================= BOOT ================= */
+load();
+renderAll();
+renderLB();
+</script>
+</body>
+</html>
