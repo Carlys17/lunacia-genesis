@@ -1472,13 +1472,14 @@ function startRound() {
   st.foeHp = st.foe.stats.hp * 6; st.foeMax = st.foeHp;
   st.meShield = 0; st.foeShield = 0; st.meAtk = 0; st.foeAtk = 0; st.meCrit = 0; st.foeCrit = 0;
   st.meEnergy = 3; st.foeEnergy = 3; st.turn = 0; st.spentEnergy = 0;
-  st.myTurn = true; st.busy = false; st.auto = st.auto || false; st.foeActed = false;
+  st.myTurn = true; st.busy = false; st.foeActed = false;
   const rw = winReward(me);
   document.getElementById('arenaSub').innerHTML = me.name + ' — Fight ' + (st.fightIdx + 1) + '/5 · <b style="color:var(--accent2)">' + st.wins + ' wins</b> · reward <b style="color:var(--gold)">' + rw + ' SLP</b>/win' + ((me.runs || 0) > 0 ? ' <span style="color:var(--dim)">(run ' + ((me.runs || 0) + 1) + ', fatigue -' + Math.round((1 - fatigueMult(me)) * 100) + '%)</span>' : '');
   renderArenaSteps();
   const log = document.getElementById('fightLog');
   log.innerHTML = '<div class="f-me">— FIGHT ' + (st.fightIdx + 1) + ' — <b>' + st.foe.name + '</b> (' + CLASSES[st.foe.class].name + ') · PWR ~' + (st.foe.stats.hp + st.foe.stats.speed + st.foe.stats.skill + st.foe.stats.morale) + ' —</div>';
   renderCombatUI();
+  if (st.auto) setTimeout(aiPlay, 600);
 }
 function endFight() {
   const st = S.arena; if (!st) return;
