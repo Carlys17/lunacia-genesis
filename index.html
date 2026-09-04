@@ -1284,7 +1284,8 @@ function renderArenaView() {
 /* ================= ARENA FLOW (v3 turn-based) ================= */
 function startGauntlet(axieId) {
   const me = S.axies.find(x=>x.id===axieId); if (!me) return;
-  S.arena = { axieId, fightIdx: 0, wins: 0, busy: false, over: false, auto: false, meEnergy: 3, foeEnergy: 3, turn: 0, meShield: 0, foeShield: 0, meAtk: 0, foeAtk: 0, spentEnergy: 0, myTurn: true };
+  const wasAuto = S.arena ? S.arena.auto : false;
+  S.arena = { axieId, fightIdx: 0, wins: 0, busy: false, over: false, auto: wasAuto, meEnergy: 3, foeEnergy: 3, turn: 0, meShield: 0, foeShield: 0, meAtk: 0, foeAtk: 0, spentEnergy: 0, myTurn: true };
   save();
   document.getElementById('arenaModalBg').classList.add('open');
   document.getElementById('fightLog').innerHTML = '';
@@ -1301,6 +1302,7 @@ function arenaNext() {
   const st = S.arena; if (!st || st.busy) return;
   if (st.over || st.fightIdx >= 5) { closeArena(); return; }
   startRound();
+  if (st.auto) setTimeout(aiPlay, 600);
 }
 function logLine(html, cls) {
   const el = document.getElementById('fightLog');
