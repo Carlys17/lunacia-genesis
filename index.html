@@ -546,7 +546,7 @@
     <p>Turn-based card combat, 5 fights. Your Axie's <b>6 body parts are its cards</b> — each costs 1-3 ⚡ energy and you refuel 3 every round. Click a card to play it, then the foe strikes back. Win = +3 🏆 +SLP; losing costs nothing — free practice.</p>
     <p>Card types: <b>⚔️ atk</b> damage · <b>🛡️ shield</b> absorbs incoming hits · <b>✨ buff</b> raises attack · <b>🎯 crit</b> boosts crit chance. <b>Skill</b> drives damage, <b>Morale</b> crits (1.7×), <b>Speed</b> never matters in card duels — pick wisely. <b>⚡ Auto</b> button plays for you.</p>
     <h4>🌀 Class Counter</h4>
-    <p>Axie classes form an advantage wheel: <b>Beast</b> &gt; Bug, Reptile · <b>Bug</b> &gt; Plant, Reptile · <b>Bird</b> &gt; Plant, Aquatic · <b>Plant</b> &gt; Aquatic, Bird · <b>Aquatic</b> &gt; Beast, Bug · <b>Reptile</b> &gt; Bird, Beast. Landing a class advantage deals <b>1.15×</b> damage (▲ADV), a disadvantage deals <b>0.85×</b> (▼DIS). Check the foe's class before you commit!</p>
+    <p>Axie classes form the official Sky Mavis wheel: <b>Aquatic &amp; Bird</b> &gt; Beast, Bug · <b>Beast &amp; Bug</b> &gt; Plant, Reptile · <b>Plant &amp; Reptile</b> &gt; Aquatic, Bird. Landing a class advantage deals <b>1.15×</b> damage (▲ADV), a disadvantage deals <b>0.85×</b> (▼DIS). Check the foe's class before you commit!</p>
     <h4>⭐ Rarity</h4>
     <p>Score = power + purity × 15. <b>Common</b> &lt; 300 · <b>Rare</b> &lt; 340 · <b>Epic</b> &lt; 380 · <b>Legendary</b> ≥ 380. Release Axies you don't need for SLP based on power.</p>
     <h4>📖 Credits</h4>
@@ -689,13 +689,16 @@ const CLASSES = {
 const CLASS_KEYS = Object.keys(CLASSES);
 
 /* Class advantage wheel (Axie official): strong = +15% dmg, weak = -15% dmg */
+/* Official Sky Mavis group wheel (6 core classes):
+   Group 1 Aquatic+Bird > Group 2 Beast+Bug > Group 3 Plant+Reptile > Group 1.
+   +15% when attacking a class you're strong against, -15% when weak. */
 const CLASS_ADV = {
-  beast:   { strong:['bug','reptile'],     weak:['aquatic','bird'] },
-  bug:     { strong:['plant','reptile'],   weak:['beast','bird'] },
-  bird:    { strong:['plant','aquatic'],   weak:['beast','bug'] },
-  plant:   { strong:['aquatic','bird'],    weak:['bug','reptile'] },
-  aquatic: { strong:['beast','bug'],       weak:['plant','bird'] },
-  reptile: { strong:['bird','beast'],      weak:['plant','bug'] },
+  aquatic: { strong:['beast','bug'],     weak:['plant','reptile'] },
+  bird:    { strong:['beast','bug'],     weak:['plant','reptile'] },
+  beast:   { strong:['plant','reptile'], weak:['aquatic','bird'] },
+  bug:     { strong:['plant','reptile'], weak:['aquatic','bird'] },
+  plant:   { strong:['aquatic','bird'],  weak:['beast','bug'] },
+  reptile: { strong:['aquatic','bird'],  weak:['beast','bug'] },
 };
 function classMult(attCls, defCls) {
   if (!attCls || !defCls || attCls === defCls) return 1;
