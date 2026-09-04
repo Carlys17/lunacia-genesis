@@ -386,6 +386,41 @@
 
   footer { text-align: center; color: var(--dim); font-size: 11px; padding: 22px 16px 30px; line-height: 1.7; position: relative; z-index: 1; }
 
+  /* ---------- v3: combat cards / energy ---------- */
+  .hand { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0; justify-content: center; }
+  .cardbtn { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 10px 8px; min-width: 92px; cursor: pointer; transition: all .15s; text-align: center; position: relative; }
+  .cardbtn:hover:not(:disabled) { transform: translateY(-2px); border-color: var(--accent); }
+  .cardbtn:disabled { opacity: .35; cursor: not-allowed; }
+  .cardbtn.affordable:not(:disabled) { border-color: var(--accent2); box-shadow: 0 0 12px rgba(51,209,122,.12); }
+  .cardbtn .cbtype { font-size: 9.5px; letter-spacing: 1.4px; color: var(--dim); text-transform: uppercase; font-weight: 700; }
+  .cardbtn .cbname { font-size: 11.5px; font-weight: 700; margin: 3px 0; line-height: 1.2; }
+  .cardbtn .cbcost { display: inline-block; background: var(--gold); color: #1c1409; font-weight: 800; padding: 1px 7px; border-radius: 4px; font-size: 10.5px; }
+  .cardbtn.foe { background: var(--panel2); }
+  .energybar { display: flex; gap: 4px; align-items: center; justify-content: center; margin: 6px 0; font-size: 11.5px; color: var(--muted); }
+  .energybar .epip { display: inline-block; width: 13px; height: 13px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 6px rgba(245,192,78,.4); }
+  .energybar .epip.spent { background: var(--line); box-shadow: none; }
+  .vsline { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin: 8px 0 2px; }
+  .vsline .who { font-weight: 800; font-size: 13px; }
+  .classpill { display: inline-block; font-size: 9.5px; font-weight: 800; letter-spacing: .6px; padding: 2px 8px; border-radius: 999px; text-transform: uppercase; margin-left: 6px; vertical-align: 1px; }
+  .classpill.adv { background: rgba(51,209,122,.12); color: var(--accent2); border: 1px solid rgba(51,209,122,.4); }
+  .classpill.disadv { background: rgba(255,92,122,.12); color: var(--red); border: 1px solid rgba(255,92,122,.4); }
+
+  /* ---------- v3: rival leaderboard ---------- */
+  .podium { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin: 14px 0; }
+  .podium .slot { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px 6px; text-align: center; }
+  .podium .slot.gold { border-color: var(--gold); box-shadow: 0 0 18px rgba(245,192,78,.18); }
+  .podium .slot.silver { border-color: #b8c0d4; }
+  .podium .slot.bronze { border-color: #d4a373; }
+  .podium .slot .pname { font-size: 12px; font-weight: 800; margin-top: 4px; }
+  .podium .slot .pscore { font-size: 11px; color: var(--gold); font-weight: 700; }
+  .podium .slot.you { border-color: var(--accent2); background: rgba(51,209,122,.07); }
+  .rankpill { display: inline-block; font-size: 10px; font-weight: 800; border-radius: 999px; padding: 2px 9px; margin-left: 8px; vertical-align: 1px; }
+  .rankpill.top3 { background: var(--gold); color: #1c1409; }
+  .rankpill.gap { background: var(--panel2); color: var(--muted); border: 1px solid var(--line2); }
+  tr.you td { background: rgba(51,209,122,.07); }
+  tr.you:hover td { background: rgba(51,209,122,.12); }
+  .lb-avatar { vertical-align: middle; display: inline-block; margin-right: 6px; }
+
   @media (max-width: 640px) {
     .dna-grid { grid-template-columns: 1fr; }
     .breed-row { flex-direction: column; }
@@ -470,8 +505,9 @@
 
   <!-- LEADERBOARD -->
   <section id="view-lb" style="display:none">
-    <h2>Arena Leaderboard</h2>
-    <p class="sub">Your bred champions ranked by trophies, then power. Starters excluded — glory belongs to the bloodline you built.</p>
+    <h2>Lunacia Leaderboard</h2>
+    <p class="sub">Climb past 8 rival builders. Score = power of your 3 best bred Axies + trophies × 4. Reach top 3 for fame!</p>
+    <div id="lbPodium"></div>
     <div class="card"><table class="lb" id="lbTable"></table></div>
   </section>
 
@@ -506,8 +542,11 @@
       <li><b>Bloodline block:</b> siblings and parent-child pairs can never breed.</li>
       <li>Every Axie carries hidden recessive genes (d2) — two ordinary parents can hide a champion.</li>
     </ul>
-    <h4>⚔️ Arena</h4>
-    <p>Auto-battle, 5 fights, difficulty ramps with each round. <b>Speed</b> decides turn order, <b>Skill</b> drives damage, <b>Morale</b> boosts crit chance (1.7×), <b>HP</b> is your lifeline. Losing costs nothing — every fight is free SLP practice.</p>
+    <h4>⚔️ Arena — Manual Combat</h4>
+    <p>Turn-based card combat, 5 fights. Your Axie's <b>6 body parts are its cards</b> — each costs 1-3 ⚡ energy and you refuel 3 every round. Click a card to play it, then the foe strikes back. Win = +3 🏆 +SLP; losing costs nothing — free practice.</p>
+    <p>Card types: <b>⚔️ atk</b> damage · <b>🛡️ shield</b> absorbs incoming hits · <b>✨ buff</b> raises attack · <b>🎯 crit</b> boosts crit chance. <b>Skill</b> drives damage, <b>Morale</b> crits (1.7×), <b>Speed</b> never matters in card duels — pick wisely. <b>⚡ Auto</b> button plays for you.</p>
+    <h4>🌀 Class Counter</h4>
+    <p>Axie classes form an advantage wheel: <b>Beast</b> &gt; Bug, Reptile · <b>Bug</b> &gt; Plant, Reptile · <b>Bird</b> &gt; Plant, Aquatic · <b>Plant</b> &gt; Aquatic, Bird · <b>Aquatic</b> &gt; Beast, Bug · <b>Reptile</b> &gt; Bird, Beast. Landing a class advantage deals <b>1.15×</b> damage (▲ADV), a disadvantage deals <b>0.85×</b> (▼DIS). Check the foe's class before you commit!</p>
     <h4>⭐ Rarity</h4>
     <p>Score = power + purity × 15. <b>Common</b> &lt; 300 · <b>Rare</b> &lt; 340 · <b>Epic</b> &lt; 380 · <b>Legendary</b> ≥ 380. Release Axies you don't need for SLP based on power.</p>
     <h4>📖 Credits</h4>
@@ -549,9 +588,15 @@
     <p class="sub center" id="arenaSub"></p>
     <div class="gauntlet-info" id="arenaSteps"></div>
     <div class="battle-scene" id="battleScene"></div>
+    <div class="vsline" id="foeLine"></div>
+    <div class="energybar" id="foeEnergy"></div>
+    <div class="hand" id="foeHand"></div>
+    <div class="energybar" id="meEnergy"></div>
+    <div class="hand" id="meHand"></div>
     <div class="fightlog" id="fightLog"></div>
     <div class="btnrow">
       <button class="b-secondary" onclick="closeArena()">Leave</button>
+      <button class="b-secondary" id="arenaAuto" onclick="toggleAuto()">⚡ Auto</button>
       <button class="b-success" id="arenaNext" onclick="arenaNext()">Next Fight</button>
     </div>
   </div>
@@ -586,7 +631,7 @@
     <p class="sub">Breed Axies, roll their genes, and climb the Arena leaderboard.</p>
     <ol class="steps">
       <li>🧬 Your slots are pre-loaded — hit <b>BREED</b> right away</li>
-      <li>⚔️ Send newborns to the <b>Arena</b> to earn SLP + trophies</li>
+      <li>⚔️ Send newborns to the <b>Arena</b> — play cards, watch class counters, climb past rivals</li>
       <li>✨ Chase <b>pure bloodlines</b> (all 6 parts matching class) for <b>Legendary</b> rarity</li>
       <li>📋 Complete <b>daily quests</b> (top-right 📋) for bonus SLP</li>
     </ol>
@@ -596,14 +641,42 @@
 
 <div id="toasts"></div>
 
-<footer>Axie Breeder: Lunacia Genesis — Vibeathon 2026 fan-made prototype · AI-vibe-coded, zero external assets · Axie Infinity is a trademark of Sky Mavis</footer>
+<footer>Axie Breeder: Lunacia Genesis v3 — manual turn-based combat · class counters · rival leaderboard · Vibeathon 2026 fan-made prototype, AI-vibe-coded, zero external assets · Axie Infinity is a trademark of Sky Mavis</footer>
 
 <script>
 'use strict';
 
 /* ================= CONFIG ================= */
-const SAVE_KEY = 'lunaciaGenesisV2';
+const SAVE_KEY = 'lunaciaGenesisV3';
+const SAVE_KEY_V2 = 'lunaciaGenesisV2';
 const BREED_COSTS = [200, 300, 500, 800, 1300, 2100, 3400, 5500, 8900];
+/* 8 rival stables for the leaderboard (score = roster power sum + trophy*4) */
+const RIVALS = [
+  { name:'Sora.eth',     cls:'plant',   roster:[{class:'plant',power:380},{class:'bird',power:340},{class:'aquatic',power:355}], trophy:142 },
+  { name:'Voxbreaker',   cls:'beast',   roster:[{class:'beast',power:395},{class:'reptile',power:330},{class:'bug',power:325}], trophy:128 },
+  { name:'Luminoir',     cls:'aquatic', roster:[{class:'aquatic',power:372},{class:'plant',power:345},{class:'bird',power:360}], trophy:118 },
+  { name:'Nightforge',   cls:'bug',     roster:[{class:'bug',power:368},{class:'beast',power:340},{class:'reptile',power:330}], trophy:104 },
+  { name:'MochiMancer',  cls:'bird',    roster:[{class:'bird',power:355},{class:'aquatic',power:340},{class:'plant',power:325}], trophy:96 },
+  { name:'CinderPyx',    cls:'reptile', roster:[{class:'reptile',power:362},{class:'beast',power:345},{class:'bug',power:320}], trophy:88 },
+  { name:'EclipseDrift', cls:'plant',   roster:[{class:'plant',power:340},{class:'bird',power:325},{class:'beast',power:330}], trophy:72 },
+  { name:'Pwniesha',     cls:'aquatic', roster:[{class:'aquatic',power:332},{class:'bug',power:315},{class:'plant',power:310}], trophy:55 },
+];
+function rivalScore(r) {
+  return r.roster.reduce((n, e) => n + e.power, 0) + r.trophy * 4;
+}
+/* Player stable: best 3 bred axies by power + total trophies*4 */
+function myStableScore() {
+  const bred = S.axies.filter(a => a.parents.length).sort((x, y) => axiePower(y) - axiePower(x)).slice(0, 3);
+  const powerSum = bred.length ? bred.reduce((n, a) => n + axiePower(a), 0) : S.axies.reduce((n, a) => n + axiePower(a), 0) * 0.5;
+  const trophies = S.axies.reduce((n, a) => n + (a.trophies || 0), 0);
+  return { powerSum: Math.round(powerSum), trophies, score: Math.round(powerSum + trophies * 4) };
+}
+function rivalRank() {
+  const me = myStableScore();
+  let rank = 1;
+  for (const r of RIVALS) if (rivalScore(r) > me.score) rank++;
+  return { rank, ...me };
+}
 
 const CLASSES = {
   beast:   { name:'Beast',   color:'#f59e0b', stats:{hp:61, speed:61, skill:31, morale:31} },
@@ -614,6 +687,100 @@ const CLASSES = {
   reptile: { name:'Reptile', color:'#a855f7', stats:{hp:55, speed:61, skill:31, morale:35} },
 };
 const CLASS_KEYS = Object.keys(CLASSES);
+
+/* Class advantage wheel (Axie official): strong = +15% dmg, weak = -15% dmg */
+const CLASS_ADV = {
+  beast:   { strong:['bug','reptile'],     weak:['aquatic','bird'] },
+  bug:     { strong:['plant','reptile'],   weak:['beast','bird'] },
+  bird:    { strong:['plant','aquatic'],   weak:['beast','bug'] },
+  plant:   { strong:['aquatic','bird'],    weak:['bug','reptile'] },
+  aquatic: { strong:['beast','bug'],       weak:['plant','bird'] },
+  reptile: { strong:['bird','beast'],      weak:['plant','bug'] },
+};
+function classMult(attCls, defCls) {
+  if (!attCls || !defCls || attCls === defCls) return 1;
+  if (CLASS_ADV[attCls] && CLASS_ADV[attCls].strong.indexOf(defCls) >= 0) return 1.15;
+  if (CLASS_ADV[attCls] && CLASS_ADV[attCls].weak.indexOf(defCls) >= 0) return 0.85;
+  return 1;
+}
+
+/* Cards: one per body part, type atk/shield/buff/crit */
+const CARD_TYPE = {
+  'Puppy':         { type:'atk',   cost:1, dmgMult:1.1,  name:'Puppy Bite' },
+  'Innocent Lamb': { type:'atk',   cost:1, dmgMult:1.2,  name:'Lambs Cry' },
+  'Papi':          { type:'atk',   cost:1, dmgMult:1.0,  name:'Papi Jab' },
+  'Rainbowfish':   { type:'shield',cost:1, shield:18,    name:'Rainbow Veil' },
+  'Hornbill':      { type:'atk',   cost:2, dmgMult:1.4,  name:'Hornbill Strike' },
+  'Compact Scope': { type:'crit',  cost:2, critBoost:0.3,name:'Target Lock' },
+  'Foxtail':       { type:'shield',cost:1, shield:14,    name:'Tail Guard' },
+  'Bird Ear':      { type:'atk',   cost:1, dmgMult:0.9,  name:'Ear Pierce' },
+  'Nutcracker':    { type:'shield',cost:1, shield:16,    name:'Nut Wall' },
+  'Snailshell':    { type:'shield',cost:1, shield:15,    name:'Snail Shell' },
+  'Papilon':       { type:'buff',  cost:1, atkBuff:0.12, name:'Papilon Aura' },
+  'Hummingwing':   { type:'atk',   cost:1, dmgMult:0.95, name:'Hummingwing' },
+  'Mecha Horn':    { type:'shield',cost:2, shield:30,    name:'Mecha Aegis' },
+  'Little Sage':   { type:'buff',  cost:1, atkBuff:0.15, name:'Sage Chant' },
+  'Yasune':        { type:'atk',   cost:2, dmgMult:1.3,  name:'Yasune Slash' },
+  'Cupid':         { type:'buff',  cost:1, atkBuff:0.15, name:'Cupid Charm' },
+  'Tiny Turtle':   { type:'shield',cost:1, shield:12,    name:'Shell Snap' },
+  'Herbert':       { type:'atk',   cost:1, dmgMult:1.15, name:'Herbert Chew' },
+  'Guppy':         { type:'atk',   cost:1, dmgMult:1.0,  name:'Guppy Bite' },
+  'Spiral Carp':   { type:'atk',   cost:2, dmgMult:1.35, name:'Spiral Strike' },
+  'Russell':       { type:'atk',   cost:1, dmgMult:1.1,  name:'Russell Bark' },
+  'Doubletalk':    { type:'crit',  cost:1, critBoost:0.2,name:'Doubletalk' },
+  'Piggy':         { type:'shield',cost:1, shield:15,    name:'Pig Snort' },
+  'Nimo':          { type:'atk',   cost:1, dmgMult:1.0,  name:'Nimo Snap' },
+  'Zeal':          { type:'atk',   cost:2, dmgMult:1.45, name:'Zeal Crush' },
+  'Single Hornnut':{ type:'atk',   cost:2, dmgMult:1.5,  name:'Hornnut Pierce' },
+  'Coral Digger':  { type:'atk',   cost:2, dmgMult:1.3,  name:'Coral Drill' },
+  'Beechnut':      { type:'shield',cost:1, shield:18,    name:'Beech Guard' },
+  'Mystic Flower': { type:'buff',  cost:1, atkBuff:0.2,  name:'Mystic Bloom' },
+  'Origami':       { type:'atk',   cost:1, dmgMult:1.0,  name:'Origami Cut' },
+  'Dual Blade':    { type:'atk',   cost:3, dmgMult:1.9,  name:'Dual Blade' },
+  'Scaly Spear':   { type:'atk',   cost:2, dmgMult:1.4,  name:'Scaly Spear' },
+  'Cuckoo':        { type:'crit',  cost:2, critBoost:0.25,name:'Cuckoo Trick' },
+  'Water Pulse':   { type:'atk',   cost:1, dmgMult:1.0,  name:'Water Pulse' },
+  'Antenna':       { type:'crit',  cost:1, critBoost:0.2,name:'Antenna Stab' },
+  'Goldfish':      { type:'shield',cost:1, shield:14,    name:'Goldfish Fin' },
+  'Anemone':       { type:'buff',  cost:1, atkBuff:0.1,  name:'Anemone Sting' },
+  'Rose Bud':      { type:'shield',cost:1, shield:16,    name:'Rose Thorns' },
+  'Lil Leaf':      { type:'shield',cost:1, shield:13,    name:'Leaf Cloak' },
+  'Beech Stake':   { type:'atk',   cost:1, dmgMult:1.05, name:'Stake Bash' },
+  'Jaguar Paw':    { type:'atk',   cost:2, dmgMult:1.35, name:'Paw Strike' },
+  'Feather Spear': { type:'atk',   cost:2, dmgMult:1.3,  name:'Feather Spear' },
+  'Hermit Shell':  { type:'shield',cost:2, shield:28,    name:'Hermit Shell' },
+  'Mecha Shell':   { type:'shield',cost:2, shield:26,    name:'Mecha Shell' },
+  'Turbine':       { type:'atk',   cost:1, dmgMult:1.0,  name:'Turbine Whirl' },
+  'Shrimp':        { type:'atk',   cost:1, dmgMult:1.1,  name:'Shrimp Snap' },
+  'Fish Hook':     { type:'atk',   cost:2, dmgMult:1.5,  name:'Fish Hook' },
+  'Gecko':         { type:'shield',cost:1, shield:14,    name:'Gecko Tail' },
+  'Jaguar':        { type:'atk',   cost:3, dmgMult:1.8,  name:'Jaguar Pounce' },
+  'Yamato':        { type:'atk',   cost:2, dmgMult:1.5,  name:'Yamato Slash' },
+  'Swallow':       { type:'atk',   cost:2, dmgMult:1.25, name:'Swallow Dive' },
+  'Raspberry':     { type:'buff',  cost:1, atkBuff:0.15, name:'Raspberry Buff' },
+  'Panpipe':       { type:'shield',cost:1, shield:12,    name:'Panpipe Hymn' },
+  'Cylinder':      { type:'shield',cost:1, shield:15,    name:'Cylinder Guard' },
+};
+function cardFor(axie, slot) {
+  const pname = axie.parts[slot];
+  return CARD_TYPE[pname] || { type:'atk', cost:1, dmgMult:1.0, name:pname };
+}
+const CARD_ICON = { atk:'⚔️', shield:'🛡️', buff:'✨', crit:'🎯' };
+function cardHTML(axie, slot, opts) {
+  const c = cardFor(axie, slot);
+  const o = opts || {};
+  const cls = ['cardbtn'];
+  if (o.affordable) cls.push('affordable');
+  if (o.foe) cls.push('foe');
+  if (o.disabled) cls.push('dis');
+  const typeTxt = o.foe && o.hidden ? '❓' : (CARD_ICON[c.type] || '⚔️') + ' ' + c.type;
+  const nameTxt = o.foe && o.hidden ? '???' : c.name;
+  const costTxt = o.foe && o.hidden ? '?' : ('<span class="cbcost">' + c.cost + '⚡</span>');
+  return '<button class="' + cls.join(' ') + '"' + (o.disabled ? ' disabled' : '') + ' onclick="playCard(\'' + axie.id + '\',\'' + slot + '\')">'
+    + '<div class="cbtype">' + typeTxt + '</div>'
+    + '<div class="cbname">' + nameTxt + '</div>'
+    + '<div>' + costTxt + '</div></button>';
+}
 
 const PART_SLOTS = ['eyes','ears','mouth','horn','back','tail'];
 const PART_POOL = {
@@ -668,24 +835,32 @@ let pendingChild = null;
 
 function defaultState() {
   return {
-    v: 2, slp: 1000, axies: [], nextId: 1, slotA: null, slotB: null,
+    v: 3, slp: 1000, axies: [], nextId: 1, slotA: null, slotB: null,
     totalWins: 0, totalBreeds: 0, totalMutations: 0,
     achievements: {},
     quests: { date: '', list: [] },
     settings: { sound: true },
     seenWelcome: false,
     arena: null,
+    /* v3 counters */
+    counterHits: 0, manualWins: 0, energyEfficientWins: 0,
   };
 }
 function save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch(e){} }
 function load() {
   S = defaultState();
   try {
-    const raw = localStorage.getItem(SAVE_KEY);
+    const raw = localStorage.getItem(SAVE_KEY) || localStorage.getItem(SAVE_KEY_V2);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (parsed && parsed.v === 2 && Array.isArray(parsed.axies) && parsed.axies.length) {
+      if (parsed && (parsed.v === 2 || parsed.v === 3) && Array.isArray(parsed.axies) && parsed.axies.length) {
         S = Object.assign(defaultState(), parsed);
+        S.v = 3;
+        S.counterHits = S.counterHits || 0;
+        S.manualWins = S.manualWins || 0;
+        S.energyEfficientWins = S.energyEfficientWins || 0;
+        S.rivalRank = typeof rivalRank === 'function' ? rivalRank().rank : 0;
+        save();
         return;
       }
     }
@@ -869,6 +1044,12 @@ const ACHV = [
   { id:'rich',    ic:'💰', nm:'SLP Baron',        ds:'Hold 2000 SLP at once',       rw:150, test:()=>S.slp>=2000 },
   { id:'col10',   ic:'🏠', nm:'Full House',       ds:'Own 10 Axies at once',        rw:200, test:()=>S.axies.length>=10 },
   { id:'legend',  ic:'🌟', nm:'Living Legend',    ds:'Breed a Legendary rarity Axie', rw:500, test:()=>S.axies.some(a=>rarityOf(a).key==='legend') },
+  /* v3 achievements */
+  { id:'counter', ic:'🌀', nm:'Counter Master',   ds:'Land 25 class-advantage hits', rw:200, test:()=>(S.counterHits||0)>=25 },
+  { id:'eEffic',  ic:'⚡', nm:'Energy Efficient', ds:'Win a fight spending ≤3 energy', rw:180, test:()=>(S.energyEfficientWins||0)>=1 },
+  { id:'rival',   ic:'🥇', nm:'Rival Crusher',    ds:'Reach top 3 on the leaderboard', rw:300, test:()=>(S.rivalRank||0)>0 && S.rivalRank<=3 },
+  { id:'manual',  ic:'🎮', nm:'Tactician',        ds:'Win 5 fights in manual mode',  rw:220, test:()=>(S.manualWins||0)>=5 },
+  { id:'podium',  ic:'🏆', nm:'Podium Finish',    ds:'Reach rank 1 on the leaderboard', rw:500, test:()=>S.rivalRank===1 },
 ];
 function checkAchievements() {
   for (const a of ACHV) {
@@ -1017,22 +1198,53 @@ function renderCollection() {
   }).join('');
 }
 
-/* ================= RENDER: LEADERBOARD ================= */
-function renderLB() {
-  const rows = [...S.axies].filter(a=>a.parents.length)
-    .sort((x,y)=>y.trophies-x.trophies || axiePower(y)-axiePower(x)).slice(0,15);
-  const medal = i => i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1);
-  document.getElementById('lbTable').innerHTML =
-    '<tr><th>#</th><th>Axie</th><th>Class</th><th>Gen</th><th>Purity</th><th>Power</th><th>⚔ Wins</th><th>🏆</th></tr>'
-    + (rows.length ? rows.map((a,i)=>
-      '<tr class="'+(i<3?'top':'')+'"><td class="'+(i===0?'rank1':'')+'">'+medal(i)+'</td>'
-      +'<td><b>'+a.name+'</b></td>'
-      +'<td style="color:'+CLASSES[a.class].color+'">'+CLASSES[a.class].name+'</td>'
-      +'<td>G'+a.gen+'</td><td>'+purity(a)+'/6</td>'
-      +'<td class="pwr">'+axiePower(a)+'</td><td>'+a.wins+'</td><td>🏆 '+a.trophies+'</td></tr>'
-    ).join('') : '<tr><td colspan="8" style="color:var(--dim);padding:24px;text-align:center">No bred Axies yet — hit the Breed Lab! 🧬</td></tr>');
+/* ================= RENDER: LEADERBOARD (v3 rivals) ================= */
+function stubAxie(cls) {
+  return { id: -2, name: '', class: cls, parts: {}, genes: {}, stats: CLASSES[cls].stats, gen: 0, trophies: 0, wins: 0, born: 0, breedCount: 0, parents: [] };
 }
-
+function top3Entries() {
+  const entries = RIVALS.map(r => ({ name: r.name, cls: r.cls, trophy: r.trophy, score: rivalScore(r), isYou: false }));
+  const me = myStableScore();
+  entries.push({ name: 'Your Stable', cls: S.axies.length ? S.axies.sort((a, b) => axiePower(b) - axiePower(a))[0].class : 'beast', trophy: me.trophies, score: me.score, isYou: true });
+  return entries.sort((a, b) => b.score - a.score).slice(0, 3);
+}
+function renderPodium() {
+  const top = top3Entries();
+  const medals = [['gold', '🥇'], ['silver', '🥈'], ['bronze', '🥉']];
+  return '<div class="podium">' + top.map((e, i) => {
+    const stub = stubAxie(e.cls);
+    return '<div class="slot ' + medals[i][0] + (e.isYou ? ' you' : '') + '">' + medals[i][1]
+      + '<div class="center">' + axieSVG(stub, 56) + '</div>'
+      + '<div class="pname">' + e.name + (e.isYou ? ' ⭐' : '') + '</div>'
+      + '<div class="pscore">' + e.score.toLocaleString() + ' pts</div>'
+      + '<div style="font-size:10px;color:var(--dim)">🏆 ' + e.trophy + '</div>'
+      + '</div>';
+  }).join('') + '</div>';
+}
+function renderLB() {
+  const me = myStableScore();
+  let rank = 1;
+  for (const r of RIVALS) if (rivalScore(r) > me.score) rank++;
+  S.rivalRank = rank;
+  const rows = RIVALS.map(r => ({ name: r.name, cls: r.cls, trophy: r.trophy, score: rivalScore(r), isYou: false }))
+    .concat([{ name: 'Your Stable', cls: S.axies.length ? [...S.axies].sort((a, b) => axiePower(b) - axiePower(a))[0].class : 'beast', trophy: me.trophies, score: me.score, isYou: true }])
+    .sort((a, b) => b.score - a.score);
+  const medal = i => i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1);
+  const pill = rank <= 3
+    ? '<span class="rankpill top3">TOP ' + rank + '</span>'
+    : '<span class="rankpill gap">+' + (rank - 3) + ' to podium</span>';
+  document.getElementById('lbTable').innerHTML =
+    '<tr><th>#</th><th>Builder</th><th>Lead class</th><th>Power</th><th>🏆</th><th>Score</th></tr>'
+    + rows.map((r, i) => {
+      const stub = stubAxie(r.cls);
+      const powerCol = r.isYou ? Math.round(me.powerSum) : r.roster ? r.roster.reduce((n, e) => n + e.power, 0) : me.powerSum;
+      return '<tr class="' + (i < 3 ? 'top' : '') + (r.isYou ? ' you' : '') + '">'
+        + '<td class="' + (i === 0 ? 'rank1' : '') + '">' + medal(i) + (r.isYou ? ' ⭐' : '') + '</td>'
+        + '<td>' + (r.isYou ? '<b style="color:var(--accent2)">' + r.name + '</b>' + pill : '<b>' + r.name + '</b>') + '</td>'
+        + '<td style="color:' + CLASSES[r.cls].color + '">' + CLASSES[r.cls].name + '<span class="lb-avatar">' + axieSVG(stub, 30) + '</span></td>'
+        + '<td>' + powerCol + '</td><td>🏆 ' + r.trophy + '</td><td class="pwr">' + r.score.toLocaleString() + '</td></tr>';
+    }).join('');
+}
 /* ================= RENDER: ACHIEVEMENTS ================= */
 function renderAch() {
   document.getElementById('achGrid').innerHTML = ACHV.map(a =>
@@ -1058,14 +1270,16 @@ function renderArenaView() {
   ).join('');
 }
 
-/* ================= ARENA FLOW ================= */
+/* ================= ARENA FLOW (v3 turn-based) ================= */
 function startGauntlet(axieId) {
   const me = S.axies.find(x=>x.id===axieId); if (!me) return;
-  S.arena = { axieId, fightIdx: 0, wins: 0, busy: true, over: false };
+  S.arena = { axieId, fightIdx: 0, wins: 0, busy: false, over: false, auto: false, meEnergy: 3, foeEnergy: 3, turn: 0, meShield: 0, foeShield: 0, meAtk: 0, foeAtk: 0, spentEnergy: 0, myTurn: true };
   save();
   document.getElementById('arenaModalBg').classList.add('open');
   document.getElementById('fightLog').innerHTML = '';
-  runFight();
+  const btn = document.getElementById('arenaNext');
+  btn.style.display = 'none';
+  startRound();
 }
 function closeArena() {
   document.getElementById('arenaModalBg').classList.remove('open');
@@ -1075,13 +1289,219 @@ function closeArena() {
 function arenaNext() {
   const st = S.arena; if (!st || st.busy) return;
   if (st.over || st.fightIdx >= 5) { closeArena(); return; }
-  runFight();
+  startRound();
+}
+function logLine(html, cls) {
+  const el = document.getElementById('fightLog');
+  if (!el) return;
+  el.innerHTML += '<div class="' + (cls || '') + '">' + html + '</div>';
+  el.scrollTop = el.scrollHeight;
+}
+function energyPips(n) {
+  let s = '';
+  for (let i = 0; i < 3; i++) s += '<span class="epip' + (i < n ? '' : ' spent') + '"></span>';
+  return s;
+}
+function classPill(me, foe) {
+  const m = classMult(me.class, foe.class);
+  if (m > 1) return '<span class="classpill adv">▲ ADV</span>';
+  if (m < 1) return '<span class="classpill disadv">▼ DIS</span>';
+  return '';
+}
+function renderCombatUI() {
+  const st = S.arena; if (!st) return;
+  const me = S.axies.find(x => x.id === st.axieId); if (!me) return;
+  const foe = st.foe;
+  const scene = document.getElementById('battleScene');
+  scene.innerHTML =
+    '<div class="fighter" id="fMe">' + axieSVG(me, 96) + '<div class="fname">' + me.name + '</div><div class="fclass" style="color:' + CLASSES[me.class].color + '">' + CLASSES[me.class].name + classPill(me, foe) + '</div><div class="hpbarr"><i id="meHpBar" style="width:' + (100 * Math.max(0, st.meHp) / st.meMax) + '%"></i></div><div class="hpnum" id="meHpNum">' + Math.max(0, Math.round(st.meHp)) + ' / ' + st.meMax + ' HP' + (st.meShield ? ' 🛡' + st.meShield : '') + (st.meAtk ? ' ✨+' + Math.round(st.meAtk * 100) + '%' : '') + '</div></div>'
+    + '<div class="vs-badge">VS</div>'
+    + '<div class="fighter" id="fFoe">' + axieSVG(foe, 96) + '<div class="fname">' + foe.name + '</div><div class="fclass" style="color:' + CLASSES[foe.class].color + '">' + CLASSES[foe.class].name + classPill(foe, me) + '</div><div class="hpbarr"><i id="foeHpBar" style="width:' + (100 * Math.max(0, st.foeHp) / st.foeMax) + '%"></i></div><div class="hpnum" id="foeHpNum">' + Math.max(0, Math.round(st.foeHp)) + ' / ' + st.foeMax + ' HP' + (st.foeShield ? ' 🛡' + st.foeShield : '') + (st.foeAtk ? ' ✨+' + Math.round(st.foeAtk * 100) + '%' : '') + '</div></div>';
+  document.getElementById('meEnergy').innerHTML = '<b style="color:var(--text)">You</b> &nbsp;' + energyPips(st.meEnergy);
+  document.getElementById('foeEnergy').innerHTML = '<b style="color:var(--text)">' + foe.name + '</b> &nbsp;' + energyPips(st.foeEnergy);
+  const meHand = document.getElementById('meHand');
+  meHand.innerHTML = PART_SLOTS.map(s => cardHTML(me, s, { disabled: !st.myTurn, affordable: st.myTurn && cardFor(me, s).cost <= st.meEnergy })).join('');
+  const foeHand = document.getElementById('foeHand');
+  foeHand.innerHTML = PART_SLOTS.map(s => cardHTML(foe, s, { foe: true, hidden: !st.reveal, disabled: true })).join('');
+  const autoBtn = document.getElementById('arenaAuto');
+  if (autoBtn) autoBtn.textContent = st.auto ? '⏸ Manual' : '⚡ Auto';
+  const next = document.getElementById('arenaNext');
+  if (next) next.style.display = st.myTurn ? 'none' : 'inline-block';
+}
+function playCard(axieId, slot) {
+  const st = S.arena; if (!st || !st.myTurn || st.busy) return;
+  const me = S.axies.find(x => x.id === axieId); if (!me) return;
+  const card = cardFor(me, slot);
+  if (card.cost > st.meEnergy) return;
+  st.auto = false;
+  st.myTurn = false;
+  st.busy = true;
+  st.meEnergy -= card.cost;
+  st.spentEnergy += card.cost;
+  applyCard(me, st.foe, card, true);
+  logLine('▶ <b style="color:var(--accent2)">' + me.name + '</b> plays <b>' + card.name + '</b> (' + CARD_ICON[card.type] + ' · ' + card.cost + '⚡)', 'f-me');
+  renderCombatUI();
+  setTimeout(endTurn, 850);
+}
+function applyCard(att, def, card, isMe) {
+  const st = S.arena;
+  if (card.type === 'shield') {
+    if (isMe) st.meShield += card.shield; else st.foeShield += card.shield;
+    logLine('🛡️ ' + att.name + ' raises a shield (+' + card.shield + ')', '');
+    return;
+  }
+  if (card.type === 'buff') {
+    if (isMe) st.meAtk = (st.meAtk || 0) + card.atkBuff; else st.foeAtk = (st.foeAtk || 0) + card.atkBuff;
+    logLine('✨ ' + att.name + ' buffs attack (+' + Math.round(card.atkBuff * 100) + '%)', '');
+    return;
+  }
+  if (card.type === 'crit') {
+    if (isMe) st.meCrit = (st.meCrit || 0) + card.critBoost; else st.foeCrit = (st.foeCrit || 0) + card.critBoost;
+    logLine('🎯 ' + att.name + ' locks on (+' + Math.round(card.critBoost * 100) + '% crit)', '');
+    return;
+  }
+  // attack
+  let dmg = (10 + att.stats.skill * 0.4) * card.dmgMult * (1 + (isMe ? st.meAtk : st.foeAtk)) * classMult(att.class, def.class) * (0.9 + Math.random() * 0.2);
+  const critCh = (att.stats.morale + (isMe ? st.meCrit : st.foeCrit) * 100) / 240;
+  const crit = Math.random() < critCh;
+  if (crit) dmg *= 1.7;
+  dmg = Math.max(1, Math.round(dmg));
+  const shield = isMe ? st.foeShield : st.meShield;
+  let absorbed = 0;
+  if (shield > 0) {
+    absorbed = Math.min(shield, dmg);
+    if (isMe) st.foeShield -= absorbed; else st.meShield -= absorbed;
+    dmg -= absorbed;
+  }
+  if (isMe) st.foeHp -= dmg; else st.meHp -= dmg;
+  const cm = classMult(att.class, def.class);
+  if (cm > 1 && isMe) S.counterHits++;
+  const cls = cm > 1 ? 'f-hit' : (cm < 1 ? 'f-weak' : '');
+  let line = (crit ? '<span class="f-crit">CRIT! </span>' : '') + att.name + ' hits ' + def.name + ' for <b>' + Math.max(0, dmg) + '</b>';
+  if (absorbed > 0) line += ' (🛡 absorbed ' + absorbed + ')';
+  if (cm > 1) line += ' <span style="color:var(--accent2)">▲class!</span>';
+  if (cm < 1) line += ' <span style="color:var(--red)">▼weak</span>';
+  logLine((crit ? '<span class="f-crit">💥</span> ' : '⚔️ ') + line, cls);
+  if (isMe) {
+    const t = document.getElementById('fFoe');
+    if (t) { shake('fFoe'); floatDmg('fFoe', dmg, crit); }
+  } else {
+    const t = document.getElementById('fMe');
+    if (t) { shake('fMe'); floatDmg('fMe', dmg, crit); }
+  }
+}
+function foePick() {
+  const st = S.arena; if (!st) return null;
+  const foe = st.foe;
+  const aff = PART_SLOTS.map(s => ({ slot: s, card: cardFor(foe, s) })).filter(x => x.card.cost <= st.foeEnergy);
+  if (!aff.length) return null;
+  // Greedy AI: prefer best dmgMult attack; sometimes shield/buff when low
+  const hpPct = st.foeHp / st.foeMax;
+  if (hpPct < 0.4 && Math.random() < 0.4) {
+    const def = aff.filter(x => x.card.type === 'shield' || x.card.type === 'buff');
+    if (def.length) return def.sort((a, b) => (b.card.shield || b.card.atkBuff || 0) - (a.card.shield || a.card.atkBuff || 0))[0];
+  }
+  const atks = aff.filter(x => x.card.type === 'atk');
+  if (atks.length) return atks.sort((a, b) => b.card.dmgMult - a.card.dmgMult)[0];
+  return aff.sort((a, b) => (b.card.dmgMult || b.card.shield || b.card.critBoost || 0) - (a.card.dmgMult || a.card.shield || a.card.critBoost || 0))[0];
+}
+function endTurn() {
+  const st = S.arena; if (!st) return;
+  const me = S.axies.find(x => x.id === st.axieId); if (!me) { closeArena(); return; }
+  // Foe acts (its own pick), then resolve round
+  if (!st.foeActed) {
+    st.foeActed = true;
+    const pick = foePick();
+    if (pick) {
+      st.foeEnergy -= pick.card.cost;
+      applyCard(st.foe, me, pick.card, false);
+      logLine('◀ <b style="color:#9db4d8">' + st.foe.name + '</b> plays <b>' + pick.card.name + '</b>', 'f-foe');
+      renderCombatUI();
+    }
+    setTimeout(endTurn, 850);
+    return;
+  }
+  st.foeActed = false;
+  st.turn++;
+  if (st.meHp <= 0 || st.foeHp <= 0) { endFight(); return; }
+  if (st.turn >= 8) { endFight(); return; }
+  st.meEnergy = 3; st.foeEnergy = 3;
+  st.myTurn = true; st.busy = false;
+  renderCombatUI();
+  if (st.auto) { setTimeout(aiPlay, 600); }
+}
+function aiPlay() {
+  const st = S.arena; if (!st || !st.myTurn || st.busy) return;
+  if (st.over) return;
+  const me = S.axies.find(x => x.id === st.axieId); if (!me) return;
+  const aff = PART_SLOTS.map(s => ({ slot: s, card: cardFor(me, s) })).filter(x => x.card.cost <= st.meEnergy);
+  if (!aff.length) { st.myTurn = false; st.busy = true; setTimeout(endTurn, 300); return; }
+  const hpPct = st.meHp / st.meMax;
+  if (hpPct < 0.4 && Math.random() < 0.4) {
+    const def = aff.filter(x => x.card.type === 'shield' || x.card.type === 'buff');
+    if (def.length) { playCard(me.id, def.sort((a, b) => (b.card.shield || b.card.atkBuff || 0) - (a.card.shield || a.card.atkBuff || 0))[0].slot); return; }
+  }
+  const atks = aff.filter(x => x.card.type === 'atk');
+  if (atks.length) { playCard(me.id, atks.sort((a, b) => b.card.dmgMult - a.card.dmgMult)[0].slot); return; }
+  playCard(me.id, aff[0].slot);
+}
+function toggleAuto() {
+  const st = S.arena; if (!st) return;
+  st.auto = !st.auto;
+  const btn = document.getElementById('arenaAuto');
+  if (btn) btn.textContent = st.auto ? '⏸ Manual' : '⚡ Auto';
+  if (st.auto && st.myTurn && !st.busy) setTimeout(aiPlay, 400);
+}
+function startRound() {
+  const st = S.arena; if (!st) return;
+  const me = S.axies.find(x => x.id === st.axieId); if (!me) { closeArena(); return; }
+  if (st.fightIdx >= 5) { finishGauntlet(); return; }
+  st.foe = makeFoe(me, st.fightIdx);
+  st.meHp = me.stats.hp * 6; st.meMax = st.meHp;
+  st.foeHp = st.foe.stats.hp * 6; st.foeMax = st.foeHp;
+  st.meShield = 0; st.foeShield = 0; st.meAtk = 0; st.foeAtk = 0; st.meCrit = 0; st.foeCrit = 0;
+  st.meEnergy = 3; st.foeEnergy = 3; st.turn = 0; st.spentEnergy = 0;
+  st.myTurn = true; st.busy = false; st.auto = st.auto || false; st.foeActed = false;
+  const rw = winReward(me);
+  document.getElementById('arenaSub').innerHTML = me.name + ' — Fight ' + (st.fightIdx + 1) + '/5 · <b style="color:var(--accent2)">' + st.wins + ' wins</b> · reward <b style="color:var(--gold)">' + rw + ' SLP</b>/win' + ((me.runs || 0) > 0 ? ' <span style="color:var(--dim)">(run ' + ((me.runs || 0) + 1) + ', fatigue -' + Math.round((1 - fatigueMult(me)) * 100) + '%)</span>' : '');
+  renderArenaSteps();
+  const log = document.getElementById('fightLog');
+  log.innerHTML = '<div class="f-me">— FIGHT ' + (st.fightIdx + 1) + ' — <b>' + st.foe.name + '</b> (' + CLASSES[st.foe.class].name + ') · PWR ~' + (st.foe.stats.hp + st.foe.stats.speed + st.foe.stats.skill + st.foe.stats.morale) + ' —</div>';
+  renderCombatUI();
+}
+function endFight() {
+  const st = S.arena; if (!st) return;
+  const me = S.axies.find(x => x.id === st.axieId); if (!me) { closeArena(); return; }
+  st.busy = false;
+  const win = st.foeHp <= 0 && st.meHp > 0;
+  st.foeActed = false;
+  st.reveal = true;
+  if (win) {
+    const rw = winReward(me);
+    me.trophies += 3; me.wins += 1; S.slp += rw; S.totalWins += 1; st.wins += 1;
+    bumpQuest('_wins', 1); bumpQuest('_slp', rw);
+    if (!st.auto) { S.manualWins++; if (st.spentEnergy <= 3) S.energyEfficientWins++; }
+    S.rivalRank = rivalRank().rank;
+    logLine('✅ ' + me.name + ' WINS — +3 🏆 +' + rw + ' SLP', 'f-win');
+    Snd.win();
+    toast('⚔️ Victory!', me.name + ' defeated ' + st.foe.name + ' · +3🏆 +' + rw + ' SLP', 'green');
+  } else {
+    logLine('❌ ' + st.foe.name + ' takes this one — no losses, try again', 'f-lose');
+    Snd.lose();
+  }
+  st.fightIdx++;
+  renderArenaSteps();
+  renderCombatUI();
+  const next = document.getElementById('arenaNext');
+  next.style.display = 'inline-block';
+  if (st.fightIdx >= 5) { next.textContent = 'Finish'; }
+  else { next.textContent = 'Next Fight'; }
+  save(); renderAll(); checkAchievements(); renderQuests();
 }
 function makeFoe(me, idx) {
   const cls = pick(CLASS_KEYS);
-  // Foes mirror the player's own stats so fights stay winnable, ramping 0.82x -> 1.14x across 5 rounds.
   const scale = 0.82 + idx * 0.08;
-  const j = () => Math.random()*10-5;
+  const j = () => Math.random() * 10 - 5;
   const stats = {
     hp: Math.max(20, Math.round(me.stats.hp * scale + j())),
     speed: Math.max(20, Math.round(me.stats.speed * scale + j())),
@@ -1089,94 +1509,12 @@ function makeFoe(me, idx) {
     morale: Math.max(15, Math.round(me.stats.morale * scale + j())),
   };
   const parts = {}; const genes = {};
-  for (const s of PART_SLOTS) { parts[s] = randPart(s)[0]; genes[s] = {d1:parts[s], d2:randPart(s)[0]}; }
-  return { id: -1, name: pick(['Ravager','Stalker','Berserker','Marauder','Wraith','Fang','Howl','Shade','Bruiser']) + '-' + (idx+1), class: cls, parts, genes, stats, gen:0, trophies:0, wins:0, born:0, breedCount:0, parents:[] };
+  for (const s of PART_SLOTS) { parts[s] = randPart(s)[0]; genes[s] = { d1: parts[s], d2: randPart(s)[0] }; }
+  return { id: -1, name: pick(['Ravager', 'Stalker', 'Berserker', 'Marauder', 'Wraith', 'Fang', 'Howl', 'Shade', 'Bruiser']) + '-' + (idx + 1), class: cls, parts, genes, stats, gen: 0, trophies: 0, wins: 0, born: 0, breedCount: 0, parents: [] };
 }
-/* Fatigue: repeated gauntlets on the same Axie pay less, pushing players back to the Breed Lab. */
 function fatigueMult(a) { return Math.max(0.3, 1 - (a.runs || 0) * 0.15); }
 function winReward(a) { return Math.round(40 * fatigueMult(a)); }
-function fightSim(me, foe) {
-  const events = [];
-  let meHp = me.stats.hp * 6, foeHp = foe.stats.hp * 6;
-  const meMax = meHp, foeMax = foeHp;
-  const order = me.stats.speed >= foe.stats.speed ? [me,foe] : [foe,me];
-  let turn = 1;
-  const strike = (atk, def) => {
-    const isMe = atk === me;
-    let dmg = (atk.stats.skill * 0.95 + 10) * (0.8 + Math.random()*0.5);
-    const crit = Math.random() < atk.stats.morale / 240;
-    if (crit) dmg *= 1.7;
-    dmg = Math.max(1, Math.round(dmg));
-    if (isMe) foeHp -= dmg; else meHp -= dmg;
-    events.push({ type: isMe ? 'mhit' : 'fhit', dmg, crit, atk: atk.name, turn });
-  };
-  while (meHp > 0 && foeHp > 0 && turn <= 12 && events.length < 60) {
-    for (const atk of order) { if (meHp <= 0 || foeHp <= 0) break; strike(atk, atk === me ? foe : me); }
-    turn++;
-  }
-  const win = foeHp <= 0 && meHp > 0;
-  return { events, win, meMax, foeMax };
-}
-function runFight() {
-  const st = S.arena; if (!st) return;
-  const me = S.axies.find(x=>x.id===st.axieId); if (!me) { closeArena(); return; }
-  st.busy = true;
-  if (st.fightIdx >= 5) { finishGauntlet(); return; }
-  const foe = makeFoe(me, st.fightIdx);
-  const rw = winReward(me);
-  document.getElementById('arenaSub').innerHTML = me.name + ' — Gauntlet run · <b style="color:var(--accent2)">' + st.wins + ' wins</b> · reward <b style="color:var(--gold)">' + rw + ' SLP</b>/win' + ((me.runs||0) > 0 ? ' <span style="color:var(--dim)">(run ' + ((me.runs||0)+1) + ', fatigue -' + Math.round((1-fatigueMult(me))*100) + '%)</span>' : '');
-  renderArenaSteps();
-  const scene = document.getElementById('battleScene');
-  scene.innerHTML =
-    '<div class="fighter" id="fMe">'+axieSVG(me,100)+'<div class="fname">'+me.name+'</div><div class="fclass" style="color:'+CLASSES[me.class].color+'">PWR '+axiePower(me)+'</div><div class="hpbarr"><i id="meHpBar" style="width:100%"></i></div><div class="hpnum" id="meHpNum"></div></div>'
-    + '<div class="vs-badge">VS</div>'
-    + '<div class="fighter" id="fFoe">'+axieSVG(foe,100)+'<div class="fname">'+foe.name+'</div><div class="fclass" style="color:'+CLASSES[foe.class].color+'">PWR ~'+(foe.stats.hp+foe.stats.speed+foe.stats.skill+foe.stats.morale)+'</div><div class="hpbarr"><i id="foeHpBar" style="width:100%"></i></div><div class="hpnum" id="foeHpNum"></div></div>';
-  const log = document.getElementById('fightLog');
-  log.innerHTML = '';
-  document.getElementById('arenaNext').textContent = 'Skip';
-  const res = fightSim(me, foe);
-  let meHp = me.stats.hp*6, foeHp = foe.stats.hp*6;
-  const step = 420;
-  res.events.forEach((e, i) => {
-    setTimeout(() => {
-      if (e.type === 'mhit') {
-        foeHp -= e.dmg;
-        document.getElementById('foeHpBar').style.width = Math.max(0, 100*foeHp/res.foeMax) + '%';
-        document.getElementById('foeHpNum').textContent = Math.max(0, Math.round(foeHp)) + ' HP';
-        shake('fFoe'); floatDmg('fFoe', e.dmg, e.crit);
-        log.innerHTML += '<div class="f-hit">T'+e.turn+' ▶ '+me.name+' hits '+foe.name+' for <b>'+e.dmg+'</b>'+(e.crit?' <span class="f-crit">CRIT!</span>':'')+'</div>';
-        e.crit ? Snd.crit() : Snd.hit();
-      } else {
-        meHp -= e.dmg;
-        document.getElementById('meHpBar').style.width = Math.max(0, 100*meHp/res.meMax) + '%';
-        document.getElementById('meHpNum').textContent = Math.max(0, Math.round(meHp)) + ' HP';
-        shake('fMe'); floatDmg('fMe', e.dmg, e.crit);
-        log.innerHTML += '<div class="f-foe">T'+e.turn+' ◀ '+foe.name+' hits '+me.name+' for '+e.dmg+(e.crit?' CRIT!':'')+'</div>';
-        Snd.hit();
-      }
-      log.scrollTop = log.scrollHeight;
-    }, i * step);
-  });
-  setTimeout(() => {
-    if (res.win) {
-      const rw = winReward(me);
-      me.trophies += 3; me.wins += 1; S.slp += rw; S.totalWins += 1; st.wins += 1;
-      bumpQuest('_wins', 1); bumpQuest('_slp', rw);
-      log.innerHTML += '<div class="f-win">✅ '+me.name+' WINS — +3 🏆 +'+rw+' SLP</div>';
-      Snd.win();
-      toast('⚔️ Victory!', me.name+' defeated '+foe.name+' · +3🏆 +'+rw+' SLP', 'green');
-    } else {
-      log.innerHTML += '<div class="f-lose">❌ '+foe.name+' takes this one — no losses, try again</div>';
-      Snd.lose();
-    }
-    st.fightIdx++;
-    log.scrollTop = log.scrollHeight;
-    renderArenaSteps();
-    const next = document.getElementById('arenaNext');
-    if (st.fightIdx >= 5) { next.textContent = 'Finish'; st.busy = false; save(); renderAll(); checkAchievements(); }
-    else { next.textContent = 'Next Fight'; st.busy = false; save(); renderAll(); checkAchievements(); }
-  }, res.events.length * step + 600);
-}
+
 function finishGauntlet() {
   const st = S.arena;
   const me = S.axies.find(x=>x.id===st.axieId);
@@ -1387,7 +1725,7 @@ function toggleSound() {
 }
 function resetSave() {
   if (!window.confirm('Wipe ALL progress — every Axie, SLP, trophy, achievement?\n\nThis cannot be undone.')) return;
-  localStorage.removeItem(SAVE_KEY);
+  localStorage.removeItem(SAVE_KEY); localStorage.removeItem(SAVE_KEY_V2);
   S = null; load(); save();
   closeSettings(); renderAll();
   toast('💀 Progress reset', 'Fresh start — 2 new starters + 1000 SLP', 'red');
@@ -1405,7 +1743,7 @@ function switchTab(t) {
   document.getElementById('view-'+t).style.display = 'block';
   const tabEl = { breed:'tabBreed', arena:'tabArena', lb:'tabLb', ach:'tabAch', guide:'tabGuide' }[t];
   document.getElementById(tabEl).classList.add('active');
-  if (t === 'lb') renderLB();
+  if (t === 'lb') { renderLB(); const pd = document.getElementById('lbPodium'); if (pd) pd.innerHTML = renderPodium(); }
   if (t === 'ach') renderAch();
   if (t === 'arena') renderArenaView();
   Snd.click();
