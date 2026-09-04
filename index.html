@@ -4,253 +4,518 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Axie Breeder: Lunacia Genesis</title>
+<meta name="description" content="Strategic Axie breeding puzzle — combine two Axies, roll their genes, and forge champions for the Arena. Vibeathon 2026 prototype.">
+<meta property="og:title" content="Axie Breeder: Lunacia Genesis">
+<meta property="og:description" content="Combine two Axies, watch their DNA shuffle, forge the perfect champion.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://carlys17.github.io/axie-breeder/">
+<meta name="theme-color" content="#0b1220">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧬</text></svg>">
 <style>
   :root {
-    --bg: #0b1220;
-    --panel: #131c2e;
-    --panel2: #1a2439;
-    --line: #2a3a57;
-    --text: #e8eef7;
-    --muted: #8fa3c0;
+    --bg: #070d18;
+    --bg2: #0b1220;
+    --panel: #101a2e;
+    --panel2: #16223c;
+    --line: #233350;
+    --line2: #2f4568;
+    --text: #e9f0fa;
+    --muted: #8ba0c2;
+    --dim: #5a6f92;
     --accent: #7c5cff;
     --accent2: #33d17a;
     --gold: #f5c04e;
-    --danger: #ff5c7a;
+    --red: #ff5c7a;
+    --blue: #578cff;
+    --r-common: #8ba0c2;
+    --r-rare: #578cff;
+    --r-epic: #b07cff;
+    --r-legend: #f5c04e;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
   body {
-    background: radial-gradient(1200px 600px at 50% -200px, #1b2b4d 0%, var(--bg) 60%);
+    background: var(--bg);
     color: var(--text);
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", sans-serif;
     min-height: 100vh;
+    overflow-x: hidden;
   }
+  /* ---------- ambient background ---------- */
+  .bgfx { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+  .bgfx::before {
+    content: ""; position: absolute; inset: 0;
+    background:
+      radial-gradient(900px 480px at 15% -10%, rgba(91,68,255,0.16), transparent 60%),
+      radial-gradient(800px 460px at 85% -8%, rgba(51,209,122,0.10), transparent 60%),
+      radial-gradient(1000px 600px at 50% 120%, rgba(87,140,255,0.08), transparent 60%);
+  }
+  .orb { position: absolute; border-radius: 50%; filter: blur(60px); opacity: .25; animation: drift 26s ease-in-out infinite alternate; }
+  .orb.a { width: 340px; height: 340px; background: #7c5cff; top: -120px; left: -80px; }
+  .orb.b { width: 300px; height: 300px; background: #2ba86a; bottom: -100px; right: -60px; animation-delay: -12s; }
+  @keyframes drift { from { transform: translate(0,0) scale(1); } to { transform: translate(60px, 40px) scale(1.15); } }
+  .stars { position: absolute; inset: 0;
+    background-image:
+      radial-gradient(1.5px 1.5px at 22% 30%, rgba(255,255,255,.5) 50%, transparent 51%),
+      radial-gradient(1px 1px at 68% 18%, rgba(255,255,255,.35) 50%, transparent 51%),
+      radial-gradient(1.5px 1.5px at 84% 66%, rgba(255,255,255,.4) 50%, transparent 51%),
+      radial-gradient(1px 1px at 12% 74%, rgba(255,255,255,.3) 50%, transparent 51%),
+      radial-gradient(1.2px 1.2px at 47% 84%, rgba(255,255,255,.35) 50%, transparent 51%),
+      radial-gradient(1px 1px at 33% 55%, rgba(255,255,255,.25) 50%, transparent 51%);
+    animation: twinkle 5s ease-in-out infinite alternate;
+  }
+  @keyframes twinkle { from { opacity: .5; } to { opacity: 1; } }
+
+  /* ---------- splash ---------- */
+  #splash {
+    position: fixed; inset: 0; z-index: 100; background: var(--bg);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 14px; transition: opacity .6s ease, visibility .6s;
+  }
+  #splash.hide { opacity: 0; visibility: hidden; }
+  .splash-logo { font-size: 42px; animation: splashbob 2s ease-in-out infinite; }
+  @keyframes splashbob { 0%,100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-14px) rotate(3deg); } }
+  .splash-title { font-size: 26px; font-weight: 800; letter-spacing: 1px; }
+  .splash-title span { background: linear-gradient(90deg, var(--accent2), var(--accent)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .splash-sub { color: var(--muted); font-size: 13px; }
+  .splash-bar { width: 220px; height: 4px; background: var(--panel2); border-radius: 2px; overflow: hidden; margin-top: 8px; }
+  .splash-bar i { display: block; height: 100%; width: 40%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 2px; animation: loadbar 1.4s ease-in-out infinite; }
+  @keyframes loadbar { 0% { transform: translateX(-100%); } 100% { transform: translateX(320%); } }
+
+  /* ---------- header ---------- */
   header {
-    display: flex; align-items: center; gap: 16px;
-    padding: 14px 22px;
-    background: rgba(19,28,46,0.85);
+    position: sticky; top: 0; z-index: 30;
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    padding: 12px 18px;
+    background: rgba(9,15,28,0.82);
+    backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--line);
-    position: sticky; top: 0; z-index: 20;
-    flex-wrap: wrap;
   }
-  .logo { font-weight: 800; font-size: 18px; letter-spacing: 0.5px; }
-  .logo span { color: var(--accent2); }
-  .badge {
-    background: var(--panel2); border: 1px solid var(--line);
-    border-radius: 999px; padding: 5px 12px; font-size: 13px; color: var(--muted);
+  .logo { font-weight: 800; font-size: 16px; letter-spacing: .4px; white-space: nowrap; }
+  .logo em { font-style: normal; background: linear-gradient(90deg, var(--accent2), var(--accent)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .res { display: flex; gap: 8px; }
+  .res .pill {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 999px;
+    padding: 5px 12px; font-size: 13px; color: var(--muted); white-space: nowrap;
   }
-  .badge b { color: var(--gold); }
-  nav { display: flex; gap: 8px; margin-left: auto; }
+  .res .pill b { color: var(--gold); font-size: 13.5px; }
+  .res .pill.ax b { color: var(--accent2); }
+  .res .pill.tr b { color: #7dd3fc; }
+  .hdr-actions { display: flex; gap: 8px; margin-left: auto; align-items: center; }
+  .iconbtn {
+    background: var(--panel); border: 1px solid var(--line); color: var(--muted);
+    border-radius: 9px; width: 34px; height: 34px; cursor: pointer; font-size: 15px;
+    transition: border-color .15s, color .15s;
+  }
+  .iconbtn:hover { border-color: var(--accent); color: var(--text); }
+  nav { display: flex; gap: 6px; width: 100%; order: 10; overflow-x: auto; scrollbar-width: none; }
+  nav::-webkit-scrollbar { display: none; }
   nav button {
-    background: none; border: 1px solid var(--line); color: var(--muted);
-    padding: 7px 14px; border-radius: 8px; cursor: pointer; font-size: 13px;
+    background: none; border: 1px solid transparent; color: var(--muted);
+    padding: 8px 14px; border-radius: 9px; cursor: pointer; font-size: 13.5px; font-weight: 600;
+    white-space: nowrap; transition: all .15s;
   }
-  nav button.active { background: var(--accent); border-color: var(--accent); color: #fff; }
-  main { max-width: 1000px; margin: 0 auto; padding: 26px 18px 60px; }
-  h2 { font-size: 20px; margin-bottom: 4px; }
-  .sub { color: var(--muted); font-size: 13px; margin-bottom: 20px; }
-  .card {
-    background: var(--panel); border: 1px solid var(--line);
-    border-radius: 14px; padding: 18px;
-  }
-  /* ---------- breed layout ---------- */
+  nav button:hover { color: var(--text); background: var(--panel); }
+  nav button.active { background: linear-gradient(135deg, var(--accent), #5a3ee0); color: #fff; border-color: transparent; }
+
+  main { max-width: 1060px; margin: 0 auto; padding: 24px 16px 80px; position: relative; z-index: 1; }
+  h2 { font-size: 21px; margin-bottom: 4px; letter-spacing: .3px; }
+  .sub { color: var(--muted); font-size: 13px; margin-bottom: 18px; line-height: 1.5; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 18px; }
+
+  /* ---------- breed lab ---------- */
   .breed-row { display: flex; gap: 14px; align-items: stretch; flex-wrap: wrap; }
   .parent-card {
-    flex: 1 1 280px; background: var(--panel); border: 1px solid var(--line);
-    border-radius: 14px; padding: 16px; text-align: center; position: relative;
-    border-width: 2px;
+    flex: 1 1 260px; background: var(--panel); border: 2px solid var(--line);
+    border-radius: 16px; padding: 14px; text-align: center; position: relative;
+    transition: border-color .2s, box-shadow .2s;
   }
-  .parent-card.slotA { border-color: #578cff; }
-  .parent-card.slotB { border-color: #ff5c7a; }
-  .parent-card .slotlabel { font-size: 11px; letter-spacing: 1.5px; color: var(--muted); text-transform: uppercase; }
-  .parent-card .axname { font-weight: 700; margin: 4px 0 2px; }
-  .parent-card .axclass { font-size: 12px; color: var(--muted); }
-  .parent-card svg { margin: 10px 0; }
-  .statbars { text-align: left; font-size: 12px; }
+  .parent-card.filled.slotA { border-color: var(--blue); box-shadow: 0 0 24px rgba(87,140,255,.14); }
+  .parent-card.filled.slotB { border-color: var(--red); box-shadow: 0 0 24px rgba(255,92,122,.13); }
+  .parent-card .slotlabel { font-size: 10.5px; letter-spacing: 1.6px; color: var(--dim); text-transform: uppercase; font-weight: 700; }
+  .parent-card .emptynote { color: var(--dim); font-size: 13px; padding: 42px 6px; }
+  .axname { font-weight: 800; margin: 6px 0 2px; font-size: 15px; }
+  .axclass { font-size: 12px; font-weight: 600; letter-spacing: .3px; }
+  .axpower { font-size: 12px; color: var(--gold); font-weight: 700; margin-top: 2px; }
+  .avatar { display: inline-block; animation: bob 3.2s ease-in-out infinite; }
+  @keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+  .statbars { text-align: left; font-size: 11.5px; margin-top: 4px; }
   .statrow { display: flex; align-items: center; gap: 8px; margin: 5px 0; }
-  .statrow .lbl { width: 56px; color: var(--muted); }
-  .statrow .bar { flex: 1; height: 8px; background: #0d1626; border-radius: 4px; overflow: hidden; }
-  .statrow .bar i { display: block; height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--accent), var(--accent2)); }
-  .parts-mini { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; margin-top: 10px; }
-  .parts-mini .pt {
-    font-size: 10.5px; background: var(--panel2); border: 1px solid var(--line);
-    padding: 3px 8px; border-radius: 6px; color: var(--muted);
-  }
-  .parts-mini .pt b { color: var(--text); }
-  .xmiddle {
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 12px; padding: 10px; min-width: 150px; margin: auto;
-  }
-  .xmiddle .xicon { font-size: 30px; color: var(--muted); }
+  .statrow .lbl { width: 52px; color: var(--muted); font-weight: 600; font-size: 10.5px; letter-spacing: .5px; }
+  .statrow .bar { flex: 1; height: 7px; background: #0a1322; border-radius: 4px; overflow: hidden; }
+  .statrow .bar i { display: block; height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--accent), var(--accent2)); transition: width .4s ease; }
+  .parts-mini { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; margin-top: 10px; }
+  .parts-mini .pt { font-size: 10px; background: var(--panel2); border: 1px solid var(--line); padding: 3px 7px; border-radius: 6px; color: var(--muted); }
+  .parts-mini .pt b { color: var(--text); font-weight: 600; }
+  .parts-mini .pt.pure { border-color: var(--accent2); color: var(--accent2); }
+  .genbadge { position: absolute; top: 10px; left: 12px; font-size: 10px; font-weight: 800; color: var(--dim); background: var(--panel2); border: 1px solid var(--line); padding: 2px 7px; border-radius: 6px; }
+  .raritytag { display: inline-block; font-size: 9.5px; font-weight: 800; letter-spacing: 1px; padding: 2px 8px; border-radius: 5px; text-transform: uppercase; margin-top: 6px; }
+  .rar-common { color: var(--r-common); border: 1px solid var(--r-common); }
+  .rar-rare { color: var(--r-rare); border: 1px solid var(--r-rare); background: rgba(87,140,255,.08); }
+  .rar-epic { color: var(--r-epic); border: 1px solid var(--r-epic); background: rgba(176,124,255,.1); }
+  .rar-legend { color: var(--r-legend); border: 1px solid var(--r-legend); background: rgba(245,192,78,.1); box-shadow: 0 0 14px rgba(245,192,78,.25); }
+
+  .xmiddle { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 8px; min-width: 170px; margin: auto; }
+  .xmiddle .xicon { font-size: 24px; color: var(--dim); animation: pulse 2.4s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { opacity: .4; transform: scale(1); } 50% { opacity: 1; transform: scale(1.12); } }
   #breedBtn {
     width: 100%;
-    background: linear-gradient(135deg, var(--accent2), #2ba86a);
-    color: #06220f; font-weight: 800; font-size: 15px;
-    border: none; border-radius: 10px; padding: 13px 18px; cursor: pointer;
-    transition: transform 0.1s, filter 0.2s;
+    background: linear-gradient(135deg, var(--accent2), #1f9159);
+    color: #052711; font-weight: 800; font-size: 15px; letter-spacing: .5px;
+    border: none; border-radius: 12px; padding: 14px 18px; cursor: pointer;
+    box-shadow: 0 6px 22px rgba(51,209,122,.25);
+    transition: transform .12s, filter .2s, box-shadow .2s;
   }
-  #breedBtn:hover { transform: translateY(-1px); filter: brightness(1.08); }
-  #breedBtn:disabled { filter: grayscale(0.8); cursor: not-allowed; transform: none; }
-  .costnote { font-size: 12px; color: var(--muted); text-align: center; }
+  #breedBtn:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.08); box-shadow: 0 10px 30px rgba(51,209,122,.35); }
+  #breedBtn:active:not(:disabled) { transform: translateY(0) scale(.98); }
+  #breedBtn:disabled { filter: grayscale(1); opacity: .45; cursor: not-allowed; box-shadow: none; }
+  .autopick {
+    width: 100%; background: none; border: 1px dashed var(--line2); color: var(--muted);
+    border-radius: 9px; padding: 7px; font-size: 11.5px; cursor: pointer; transition: all .15s;
+  }
+  .autopick:hover { border-color: var(--accent); color: var(--text); }
+  .costnote { font-size: 11.5px; color: var(--muted); text-align: center; }
   .costnote b { color: var(--gold); }
-  .warn { color: var(--danger); font-size: 12px; text-align: center; min-height: 16px; }
+  .warn { color: var(--red); font-size: 11.5px; text-align: center; min-height: 15px; line-height: 1.4; }
+
   /* ---------- collection ---------- */
-  .sectiontitle { font-size: 15px; font-weight: 700; margin: 26px 0 10px; }
-  #collection { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+  .sectiontitle { font-size: 14px; font-weight: 700; margin: 24px 0 4px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .count-pill { font-size: 10.5px; font-weight: 700; color: var(--accent2); background: rgba(51,209,122,.1); border: 1px solid rgba(51,209,122,.35); border-radius: 999px; padding: 2px 9px; }
+  .coll-controls { display: flex; gap: 8px; margin: 8px 0 12px; flex-wrap: wrap; }
+  .coll-controls select {
+    background: var(--panel); color: var(--text); border: 1px solid var(--line);
+    border-radius: 8px; padding: 6px 10px; font-size: 12px; cursor: pointer;
+  }
+  #collection { display: grid; grid-template-columns: repeat(auto-fill, minmax(148px, 1fr)); gap: 10px; }
   .axmini {
-    background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
-    padding: 10px; text-align: center; cursor: pointer; position: relative;
-    transition: border-color 0.15s, transform 0.1s;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+    padding: 12px 10px; text-align: center; cursor: pointer; position: relative;
+    transition: transform .12s, border-color .15s, box-shadow .15s; overflow: hidden;
   }
-  .axmini:hover { border-color: var(--accent); transform: translateY(-2px); }
-  .axmini.selA { border-color: #578cff; box-shadow: 0 0 0 1px #578cff; }
-  .axmini.selB { border-color: #ff5c7a; box-shadow: 0 0 0 1px #ff5c7a; }
-  .axmini .mname { font-size: 12.5px; font-weight: 700; margin-top: 6px; }
-  .axmini .mmeta { font-size: 11px; color: var(--muted); }
-  .axmini .mtroph { font-size: 11px; color: var(--gold); }
-  .axmini .tagAB {
-    position: absolute; top: 6px; right: 8px; font-size: 10px; font-weight: 800;
-    background: var(--accent); color: #fff; border-radius: 4px; padding: 1px 6px;
+  .axmini::after { content: ""; position: absolute; inset: 0; border-radius: 14px; pointer-events: none; border: 1px solid transparent; transition: border-color .15s; }
+  .axmini:hover { transform: translateY(-3px); border-color: var(--line2); }
+  .axmini.selA::after { border-color: var(--blue); box-shadow: inset 0 0 20px rgba(87,140,255,.08); }
+  .axmini.selB::after { border-color: var(--red); box-shadow: inset 0 0 20px rgba(255,92,122,.08); }
+  .axmini .mtag {
+    position: absolute; top: 8px; right: 8px; font-size: 9.5px; font-weight: 800;
+    background: var(--blue); color: #fff; border-radius: 5px; padding: 2px 7px; letter-spacing: .5px;
   }
-  .axmini.selA .tagAB { background: #578cff; }
-  .axmini.selB .tagAB { background: #ff5c7a; }
-  .tip { font-size: 12px; color: var(--muted); margin-top: 8px; }
-  /* ---------- modal ---------- */
+  .axmini.selB .mtag { background: var(--red); }
+  .axmini.selA.selB .mtag { background: linear-gradient(90deg, var(--blue), var(--red)); }
+  .axmini .mgen { position: absolute; top: 8px; left: 10px; font-size: 9.5px; font-weight: 700; color: var(--dim); }
+  .axmini .mname { font-size: 12.5px; font-weight: 700; margin-top: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .axmini .mmeta { font-size: 10.5px; margin-top: 1px; }
+  .axmini .mtroph { font-size: 10px; color: var(--gold); margin-top: 3px; }
+  .axmini .mpurity { font-size: 9.5px; color: var(--dim); }
+  .tip { font-size: 11.5px; color: var(--dim); margin-top: 12px; line-height: 1.55; }
+  .tip b { color: var(--muted); }
+
+  /* ---------- modals ---------- */
   .modalbg {
-    display: none; position: fixed; inset: 0; background: rgba(4,8,16,0.8);
-    z-index: 50; align-items: center; justify-content: center; padding: 16px;
+    display: none; position: fixed; inset: 0; z-index: 60;
+    background: rgba(4,8,16,.78); backdrop-filter: blur(6px);
+    align-items: center; justify-content: center; padding: 14px;
   }
-  .modalbg.open { display: flex; }
+  .modalbg.open { display: flex; animation: fadein .25s ease; }
+  @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
   .modal {
-    background: var(--panel); border: 1px solid var(--line); border-radius: 16px;
-    max-width: 620px; width: 100%; padding: 24px; max-height: 92vh; overflow-y: auto;
+    background: linear-gradient(180deg, var(--panel2), var(--panel));
+    border: 1px solid var(--line2); border-radius: 18px;
+    max-width: 640px; width: 100%; padding: 26px; max-height: 92vh; overflow-y: auto;
+    animation: pop .3s cubic-bezier(.2,1.4,.4,1);
+    box-shadow: 0 24px 80px rgba(0,0,0,.5);
   }
-  .modal h3 { margin-bottom: 6px; font-size: 18px; }
-  .dna-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 18px 0; }
-  .dnarow {
-    background: var(--panel2); border: 1px solid var(--line); border-radius: 8px;
-    padding: 8px 10px; font-size: 12px; display: flex; justify-content: space-between; align-items: center;
-  }
-  .dnarow .slot { color: var(--muted); text-transform: uppercase; font-size: 10px; letter-spacing: 1px; }
-  .dnarow .val { font-weight: 700; }
-  .dnarow.locked { border-color: var(--accent2); }
-  .dnarow.rolling .val { color: var(--accent); animation: blink 0.35s infinite alternate; }
-  @keyframes blink { to { opacity: 0.35; } }
+  @keyframes pop { from { transform: scale(.92) translateY(10px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+  .modal h3 { margin-bottom: 4px; font-size: 19px; }
   .center { text-align: center; }
-  .btnrow { display: flex; gap: 10px; margin-top: 18px; }
+  .btnrow { display: flex; gap: 10px; margin-top: 20px; }
   .btnrow button {
-    flex: 1; padding: 12px; border-radius: 10px; border: none; cursor: pointer;
-    font-weight: 700; font-size: 14px;
+    flex: 1; padding: 13px; border-radius: 11px; border: none; cursor: pointer;
+    font-weight: 700; font-size: 14px; transition: transform .1s, filter .15s;
   }
+  .btnrow button:hover { transform: translateY(-1px); filter: brightness(1.08); }
   .b-primary { background: linear-gradient(135deg, var(--accent), #5a3ee0); color: #fff; }
-  .b-secondary { background: var(--panel2); color: var(--text); border: 1px solid var(--line) !important; }
-  /* ---------- arena ---------- */
-  .vsrow {
-    display: flex; align-items: center; gap: 14px; justify-content: center;
-    margin: 14px 0;
+  .b-success { background: linear-gradient(135deg, var(--accent2), #1f9159); color: #052711; }
+  .b-secondary { background: var(--panel2); color: var(--text); border: 1px solid var(--line2) !important; }
+
+  /* dna roll */
+  .dna-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 18px 0 14px; }
+  .dnarow {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+    padding: 10px 12px; font-size: 12.5px; display: flex; justify-content: space-between; align-items: center;
+    transition: border-color .2s, box-shadow .2s;
   }
+  .dnarow .slot { color: var(--dim); text-transform: uppercase; font-size: 10px; letter-spacing: 1.2px; font-weight: 700; }
+  .dnarow .val { font-weight: 700; }
+  .dnarow.rolling { border-color: var(--accent); }
+  .dnarow.rolling .val { color: var(--accent); animation: blink .3s infinite alternate; }
+  @keyframes blink { to { opacity: .3; } }
+  .dnarow.locked { border-color: var(--accent2); box-shadow: 0 0 12px rgba(51,209,122,.18); }
+  .dnarow.locked .val { color: var(--accent2); }
+  #dnaStatus { min-height: 22px; }
+
+  /* ---------- arena view ---------- */
+  .arena-pick { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin: 14px 0; }
+  .gauntlet-info { display: flex; gap: 10px; flex-wrap: wrap; margin: 12px 0; }
+  .gstep { flex: 1; min-width: 90px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px; text-align: center; font-size: 12px; color: var(--muted); }
+  .gstep.won { border-color: var(--accent2); color: var(--accent2); background: rgba(51,209,122,.07); }
+  .gstep.lost { border-color: var(--red); color: var(--red); opacity: .7; }
+  .battle-scene { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 16px 0; position: relative; }
+  .fighter { flex: 1; text-align: center; position: relative; }
+  .fighter .fname { font-size: 12.5px; font-weight: 700; margin-top: 4px; }
+  .fighter .fclass { font-size: 10.5px; color: var(--muted); }
+  .fighter .hpbarr { height: 9px; background: #0a1322; border: 1px solid var(--line); border-radius: 5px; overflow: hidden; margin: 6px 10px 0; }
+  .fighter .hpbarr i { display: block; height: 100%; background: linear-gradient(90deg, #ff5c7a, #f5c04e, var(--accent2)); transition: width .35s ease; }
+  .fighter .hpnum { font-size: 10px; color: var(--muted); margin-top: 2px; }
+  .vs-badge { font-size: 13px; font-weight: 800; color: var(--dim); padding: 6px 4px; }
+  .fighter.shaking { animation: shake .35s ease; }
+  @keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+  .dmgfloat {
+    position: absolute; top: 20%; left: 50%; transform: translateX(-50%);
+    font-weight: 800; font-size: 17px; color: var(--gold);
+    text-shadow: 0 2px 8px rgba(0,0,0,.6); pointer-events: none;
+    animation: floatup 1s ease forwards;
+  }
+  .dmgfloat.crit { color: var(--red); font-size: 21px; }
+  @keyframes floatup { from { opacity: 1; transform: translate(-50%, 0); } to { opacity: 0; transform: translate(-50%, -44px); } }
   .fightlog {
-    background: #0d1626; border: 1px solid var(--line); border-radius: 10px;
-    padding: 12px; font-family: ui-monospace, Menlo, monospace; font-size: 12.5px;
-    max-height: 220px; overflow-y: auto; line-height: 1.7;
+    background: #0a1220; border: 1px solid var(--line); border-radius: 12px;
+    padding: 12px 14px; font-family: ui-monospace, "Cascadia Mono", Menlo, monospace;
+    font-size: 12px; max-height: 200px; overflow-y: auto; line-height: 1.75;
   }
-  .fightlog .win { color: var(--accent2); }
-  .fightlog .lose { color: var(--danger); }
-  .fightlog .hit { color: var(--gold); }
+  .fightlog .f-me { color: var(--accent2); }
+  .fightlog .f-foe { color: #9db4d8; }
+  .fightlog .f-hit { color: var(--gold); }
+  .fightlog .f-crit { color: var(--red); font-weight: 700; }
+  .fightlog .f-win { color: var(--accent2); font-weight: 700; }
+  .fightlog .f-lose { color: var(--red); font-weight: 700; }
+
   /* ---------- leaderboard ---------- */
-  table.lb { width: 100%; border-collapse: collapse; font-size: 13.5px; }
-  table.lb th { text-align: left; color: var(--muted); font-weight: 600; padding: 8px 10px; border-bottom: 1px solid var(--line); font-size: 12px; }
-  table.lb td { padding: 9px 10px; border-bottom: 1px solid #1c2942; }
-  table.lb tr.top td { background: rgba(124,92,255,0.08); }
+  table.lb { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.lb th { text-align: left; color: var(--dim); font-weight: 700; padding: 8px 10px; border-bottom: 1px solid var(--line); font-size: 10.5px; letter-spacing: .8px; text-transform: uppercase; }
+  table.lb td { padding: 10px; border-bottom: 1px solid #17223a; }
+  table.lb tr:hover td { background: rgba(124,92,255,.05); }
+  table.lb tr.top td { background: rgba(245,192,78,.06); }
+  table.lb tr.top:hover td { background: rgba(245,192,78,.1); }
   .pwr { font-weight: 800; color: var(--gold); }
+  .rank1 { font-size: 15px; }
+
+  /* ---------- quests / achievements ---------- */
+  .quest-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
+  .quest {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+    padding: 13px; display: flex; flex-direction: column; gap: 6px;
+  }
+  .quest .qtitle { font-size: 13px; font-weight: 700; display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+  .quest .qdesc { font-size: 11px; color: var(--muted); line-height: 1.5; }
+  .quest .qbar { height: 6px; background: #0a1322; border-radius: 3px; overflow: hidden; }
+  .quest .qbar i { display: block; height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); transition: width .4s ease; }
+  .quest .qfoot { display: flex; justify-content: space-between; font-size: 10.5px; color: var(--dim); }
+  .quest.done { border-color: var(--accent2); }
+  .quest .qclaim {
+    margin-top: 4px; background: var(--accent2); color: #052711; font-weight: 700; font-size: 11px;
+    border: none; border-radius: 8px; padding: 7px; cursor: pointer;
+  }
+  .quest .qclaim:disabled { background: var(--panel2); color: var(--dim); cursor: default; }
+  .achv { display: flex; gap: 10px; flex-wrap: wrap; }
+  .achv .ach {
+    width: 105px; text-align: center; background: var(--panel); border: 1px solid var(--line);
+    border-radius: 12px; padding: 12px 6px; opacity: .4; filter: grayscale(1); transition: all .2s;
+  }
+  .achv .ach.got { opacity: 1; filter: none; border-color: var(--gold); box-shadow: 0 0 16px rgba(245,192,78,.15); }
+  .achv .ach .ic { font-size: 24px; }
+  .achv .ach .nm { font-size: 10px; font-weight: 700; margin-top: 5px; line-height: 1.3; }
+  .achv .ach .ds { font-size: 9px; color: var(--dim); margin-top: 2px; line-height: 1.35; }
+
   /* ---------- guide ---------- */
-  .guide h4 { margin: 16px 0 6px; }
-  .guide p, .guide li { color: var(--muted); font-size: 13.5px; line-height: 1.65; }
-  .guide ol, .guide ul { padding-left: 22px; }
+  .guide h4 { margin: 18px 0 6px; font-size: 15px; }
+  .guide p, .guide li { color: var(--muted); font-size: 13px; line-height: 1.7; }
+  .guide ol, .guide ul { padding-left: 22px; margin: 4px 0; }
   .guide b { color: var(--text); }
-  .genechance {
-    display: flex; gap: 8px; margin: 10px 0; flex-wrap: wrap;
+  .guide .hl { color: var(--accent2); font-weight: 700; }
+  .genechance { display: flex; gap: 8px; margin: 10px 0; flex-wrap: wrap; }
+  .genechance div { background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; font-size: 11px; text-align: center; flex: 1; min-width: 120px; color: var(--muted); }
+  .genechance b { display: block; font-size: 17px; margin-bottom: 3px; color: var(--text); }
+
+  /* ---------- detail modal ---------- */
+  .detail-grid { display: grid; grid-template-columns: 150px 1fr; gap: 18px; align-items: start; }
+  @media (max-width: 560px) { .detail-grid { grid-template-columns: 1fr; } }
+  .genes-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .genes-table th { text-align: left; color: var(--dim); font-size: 9.5px; text-transform: uppercase; letter-spacing: 1px; padding: 6px 8px; border-bottom: 1px solid var(--line); }
+  .genes-table td { padding: 7px 8px; border-bottom: 1px solid #16223a; }
+  .genechip { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 6px; border: 1px solid var(--line); color: var(--muted); background: var(--panel2); }
+  .genechip.active { border-color: var(--accent2); color: var(--accent2); }
+  .genechip.match { border-color: var(--gold); color: var(--gold); }
+  .ftree { font-size: 12px; color: var(--muted); line-height: 1.8; }
+  .ftree b { color: var(--text); }
+  .ftree .gone { color: var(--dim); font-style: italic; }
+
+  /* ---------- toasts ---------- */
+  #toasts { position: fixed; bottom: 18px; right: 18px; z-index: 90; display: flex; flex-direction: column; gap: 8px; max-width: 320px; }
+  .toast {
+    background: var(--panel2); border: 1px solid var(--line2); border-left: 3px solid var(--accent);
+    border-radius: 11px; padding: 12px 15px; font-size: 13px; box-shadow: 0 10px 34px rgba(0,0,0,.45);
+    animation: toastin .35s cubic-bezier(.2,1.2,.4,1);
   }
-  .genechance div {
-    background: var(--panel2); border: 1px solid var(--line); border-radius: 8px;
-    padding: 8px 12px; font-size: 12px; text-align: center; flex: 1;
+  .toast.gold { border-left-color: var(--gold); }
+  .toast.green { border-left-color: var(--accent2); }
+  .toast.red { border-left-color: var(--red); }
+  .toast b { display: block; font-size: 12px; margin-bottom: 1px; }
+  @keyframes toastin { from { transform: translateX(60px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+  .toast.out { transition: all .4s; transform: translateX(60px); opacity: 0; }
+
+  /* ---------- welcome ---------- */
+  .steps { text-align: left; margin: 16px 0; }
+  .steps li { margin: 8px 0; color: var(--muted); font-size: 13.5px; line-height: 1.6; }
+  .steps b { color: var(--text); }
+  kbd {
+    background: var(--panel2); border: 1px solid var(--line2); border-bottom-width: 2px;
+    border-radius: 5px; padding: 1px 6px; font-size: 11.5px; font-family: ui-monospace, monospace;
   }
-  .genechance b { display: block; font-size: 16px; margin-bottom: 2px; }
-  footer { text-align: center; color: #5d7191; font-size: 11.5px; padding: 18px; }
+
+  /* ---------- settings ---------- */
+  .setrow { display: flex; justify-content: space-between; align-items: center; padding: 13px 0; border-bottom: 1px solid #17223a; font-size: 14px; }
+  .setrow:last-child { border: none; }
+  .toggle { position: relative; width: 44px; height: 24px; background: var(--panel); border: 1px solid var(--line2); border-radius: 999px; cursor: pointer; transition: background .2s; }
+  .toggle.on { background: var(--accent); border-color: var(--accent); }
+  .toggle i { position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; background: #fff; border-radius: 50%; transition: left .2s; }
+  .toggle.on i { left: 22px; }
+  .danger-link { color: var(--red); background: none; border: 1px solid rgba(255,92,122,.4); border-radius: 8px; padding: 7px 14px; font-size: 12px; cursor: pointer; }
+  .danger-link:hover { background: rgba(255,92,122,.1); }
+
+  footer { text-align: center; color: var(--dim); font-size: 11px; padding: 22px 16px 30px; line-height: 1.7; position: relative; z-index: 1; }
+
+  @media (max-width: 640px) {
+    .dna-grid { grid-template-columns: 1fr; }
+    .breed-row { flex-direction: column; }
+    .xmiddle { flex-direction: row; width: 100%; }
+    #breedBtn { padding: 12px; }
+    nav button { padding: 7px 11px; font-size: 12.5px; }
+    main { padding: 16px 12px 70px; }
+  }
 </style>
 </head>
 <body>
 
+<div class="bgfx"><div class="orb a"></div><div class="orb b"></div><div class="stars"></div></div>
+
+<div id="splash">
+  <div class="splash-logo">🧬</div>
+  <div class="splash-title">Axie Breeder<span>: Lunacia Genesis</span></div>
+  <div class="splash-sub">Warming up the gene forge...</div>
+  <div class="splash-bar"><i></i></div>
+</div>
+
 <header>
-  <div class="logo">Axie Breeder<span>: Lunacia Genesis</span></div>
-  <div class="badge">SLP <b id="slpBadge">1000</b></div>
-  <div class="badge">Breds <b id="breedBadge">0</b></div>
+  <div class="logo">Axie Breeder<em>: Lunacia Genesis</em></div>
+  <div class="res">
+    <div class="pill">⚡ <b id="slpBadge">0</b></div>
+    <div class="pill ax">🧬 <b id="axieBadge">0</b></div>
+    <div class="pill tr">🏆 <b id="trophyBadge">0</b></div>
+  </div>
+  <div class="hdr-actions">
+    <button class="iconbtn" id="questBtn" title="Daily quests" onclick="openQuests()">📋</button>
+    <button class="iconbtn" title="Settings" onclick="openSettings()">⚙️</button>
+  </div>
   <nav>
-    <button id="tabBreed" class="active" onclick="switchTab('breed')">Breed Lab</button>
-    <button id="tabLb" onclick="switchTab('lb')">Leaderboard</button>
-    <button id="tabGuide" onclick="switchTab('guide')">How to Play</button>
+    <button id="tabBreed" class="active" onclick="switchTab('breed')">🧬 Breed Lab</button>
+    <button id="tabArena" onclick="switchTab('arena')">⚔️ Arena</button>
+    <button id="tabLb" onclick="switchTab('lb')">🏆 Leaderboard</button>
+    <button id="tabAch" onclick="switchTab('ach')">⭐ Achievements</button>
+    <button id="tabGuide" onclick="switchTab('guide')">📖 How to Play</button>
   </nav>
 </header>
 
 <main>
-  <!-- ============ BREED LAB ============ -->
+  <!-- BREED LAB -->
   <section id="view-breed">
     <h2>Breed Lab</h2>
-    <p class="sub">Pick two Axies from your collection, roll their genes, and forge champions for the Arena. Siblings can never breed — plan your bloodlines.</p>
-
+    <p class="sub">Pick two Axies, roll their genes, forge champions. Bloodline laws apply — siblings can never breed.</p>
     <div class="breed-row">
-      <div class="parent-card slotA" id="parentCardA"></div>
+      <div class="parent-card" id="parentCardA"></div>
       <div class="xmiddle">
         <div class="xicon">✕</div>
         <button id="breedBtn" onclick="doBreed()">BREED</button>
-        <div class="costnote">Cost: <b id="costNote">200</b> SLP</div>
+        <button class="autopick" onclick="autoPick()">✨ Auto-pick best pair</button>
+        <div class="costnote">Cost: <b id="costNote">—</b> SLP</div>
         <div class="warn" id="breedWarn"></div>
       </div>
-      <div class="parent-card slotB" id="parentCardB"></div>
+      <div class="parent-card" id="parentCardB"></div>
     </div>
-
-    <div class="sectiontitle">Your Collection — click an Axie to load Slot A, click again for Slot B</div>
+    <div class="sectiontitle">Your Collection <span class="count-pill" id="collCount"></span></div>
+    <div class="coll-controls">
+      <select id="sortSel" onchange="renderCollection()">
+        <option value="new">Sort: Newest</option>
+        <option value="power">Sort: Power</option>
+        <option value="purity">Sort: Purity</option>
+        <option value="trophies">Sort: Trophies</option>
+      </select>
+      <select id="classSel" onchange="renderCollection()"><option value="">All classes</option></select>
+    </div>
     <div id="collection"></div>
-    <p class="tip">Earn SLP in the Arena to fund more breeds. Each Axie's breed cost rises the more times it has bred (200 → 300 → 500 → 800 → 1300...), just like Lunacia's real bloodline laws.</p>
+    <p class="tip">💡 Click an Axie → <b>Slot A</b>, click another → <b>Slot B</b>, same Axie again → clear. Click a name for <b>full details</b> (genes, family tree, arena, release). Each Axie's breed cost rises with use: 200 → 300 → 500 → 800 → 1300 SLP. Win fights in the <b>Arena</b> to fund more breeds.</p>
   </section>
 
-  <!-- ============ LEADERBOARD ============ -->
+  <!-- ARENA -->
+  <section id="view-arena" style="display:none">
+    <h2>Arena Gauntlet</h2>
+    <p class="sub">Send any Axie through a 5-fight gauntlet. Opponents scale to your power. Win fights for trophies and SLP — sweep all 5 for a bonus.</p>
+    <div class="card">
+      <div class="sectiontitle" style="margin-top:0">Choose your champion</div>
+      <div class="arena-pick" id="arenaPick"></div>
+      <div class="gauntlet-info" id="gauntletInfo"></div>
+    </div>
+  </section>
+
+  <!-- LEADERBOARD -->
   <section id="view-lb" style="display:none">
     <h2>Arena Leaderboard</h2>
-    <p class="sub">Your strongest bred champions ranked by trophies and power. Bred-in-Lunacia only.</p>
+    <p class="sub">Your bred champions ranked by trophies, then power. Starters excluded — glory belongs to the bloodline you built.</p>
     <div class="card"><table class="lb" id="lbTable"></table></div>
   </section>
 
-  <!-- ============ GUIDE ============ -->
+  <!-- ACHIEVEMENTS -->
+  <section id="view-ach" style="display:none">
+    <h2>Achievements</h2>
+    <p class="sub">Milestones across your breeding career. Each grants bonus SLP.</p>
+    <div class="achv" id="achGrid"></div>
+  </section>
+
+  <!-- GUIDE -->
   <section id="view-guide" style="display:none" class="card guide">
-    <h2>How to Play</h2>
-    <h4>First play</h4>
+    <h2 style="margin-top:0">How to Play</h2>
+    <h4>🎯 First play — 60 seconds</h4>
     <ol>
-      <li>You start with <b>2 starter Axies</b> and <b>1000 SLP</b>.</li>
-      <li>Click an Axie in your collection → loads into <b>Slot A</b>. Click another → <b>Slot B</b>. Clicking the same Axie twice cycles its slot.</li>
-      <li>Press <b>BREED</b> and watch the gene roll. Costs SLP.</li>
-      <li>The newborn joins your collection — then <b>Send to Arena</b> to fight 5 opponents and win trophies + SLP.</li>
-      <li>Rinse, repeat, climb the leaderboard. Bred Axies with <b>pure matching parts</b> (same class) are stronger in the Arena.</li>
+      <li>You start with <b>2 starter Axies</b>, <b>1000 SLP</b>, and both breed slots pre-filled.</li>
+      <li>Hit <b>BREED</b> — watch the gene roll — a newborn Axie joins your collection.</li>
+      <li><b>Send to Arena</b> from the reveal, or pick any Axie in the <b>Arena tab</b>.</li>
+      <li>Win gauntlet fights: <span class="hl">+3 🏆 +15 SLP each</span>, sweep bonus <span class="hl">+10 🏆 +50 SLP</span>.</li>
+      <li>Breed smarter each generation: same-class parts stack <b>power</b>, purity drives <b>rarity</b>.</li>
     </ol>
-    <h4>Genetics rules</h4>
+    <h4>🧬 Genetics rules</h4>
     <div class="genechance">
       <div><b>70%</b>dominant gene (d1) from a random parent</div>
-      <div><b>30%</b>recessive gene (d2) surfaces</div>
-      <div><b>3%</b>mutation: a brand-new part appears</div>
+      <div><b>30%</b>recessive gene (d2) surfaces instead</div>
+      <div><b>3%</b>mutation: brand-new part appears</div>
     </div>
     <ul>
-      <li>Offspring class: 50% from either parent.</li>
-      <li><b>Siblings can never breed</b> — two Axies sharing a parent are bloodline-blocked.</li>
-      <li>Each Axie's breed cost grows with its own breed count.</li>
-      <li>Stats (HP, Speed, Skill, Morale) average the parents with natural variance.</li>
+      <li>Offspring class: 50/50 from either parent.</li>
+      <li>Stats average both parents with natural variance.</li>
+      <li><b>Purity</b> = parts matching the Axie's class. 6/6 pure parts = +36 power and top rarity odds.</li>
+      <li><b>Bloodline block:</b> siblings and parent-child pairs can never breed.</li>
+      <li>Every Axie carries hidden recessive genes (d2) — two ordinary parents can hide a champion.</li>
     </ul>
-    <h4>Arena</h4>
-    <p>Auto-battle vs 5 procedurally generated challengers. Higher <b>Speed</b> strikes first each round, <b>Skill</b> boosts damage, <b>Morale</b> adds crits, <b>HP</b> keeps you standing. Each win: <b>+3 trophies, +15 SLP</b>.</p>
-    <h4>Goal</h4>
-    <p>Breed the highest-power champion, stack trophies, and claim the top of the Lunacia Genesis leaderboard.</p>
+    <h4>⚔️ Arena</h4>
+    <p>Auto-battle, 5 fights, difficulty ramps with each round. <b>Speed</b> decides turn order, <b>Skill</b> drives damage, <b>Morale</b> boosts crit chance (1.7×), <b>HP</b> is your lifeline. Losing costs nothing — every fight is free SLP practice.</p>
+    <h4>⭐ Rarity</h4>
+    <p>Score = power + purity × 15. <b>Common</b> &lt; 300 · <b>Rare</b> &lt; 340 · <b>Epic</b> &lt; 380 · <b>Legendary</b> ≥ 380. Release Axies you don't need for SLP based on power.</p>
+    <h4>📖 Credits</h4>
+    <p>Fan-made prototype for Axie Vibeathon 2026, AI-vibe-coded (Claude Code + Hermes Agent iteration), zero external assets — every Axie is drawn live from its genes. Axie Infinity is a trademark of Sky Mavis.</p>
   </section>
 </main>
 
-<!-- ============ DNA ROLL MODAL ============ -->
+<!-- DNA ROLL MODAL -->
 <div class="modalbg" id="dnaModalBg">
   <div class="modal center">
     <h3>🧬 Gene Roll</h3>
@@ -260,483 +525,930 @@
   </div>
 </div>
 
-<!-- ============ RESULT MODAL ============ -->
+<!-- RESULT MODAL -->
 <div class="modalbg" id="resultModalBg">
   <div class="modal center">
-    <h3 id="resultTitle">A new Axie is born!</h3>
+    <h3 id="resultTitle"></h3>
     <div id="resultBody"></div>
     <div class="btnrow">
-      <button class="b-secondary" onclick="closeResult()">Keep Later</button>
-      <button class="b-primary" onclick="sendToArena()">⚔ Send to Arena</button>
+      <button class="b-secondary" onclick="closeResult()">Keep for Later</button>
+      <button class="b-success" onclick="sendToArena()">⚔️ Send to Arena</button>
     </div>
   </div>
 </div>
 
-<!-- ============ ARENA MODAL ============ -->
+<!-- DETAIL MODAL -->
+<div class="modalbg" id="detailModalBg">
+  <div class="modal" id="detailBody"></div>
+</div>
+
+<!-- ARENA MODAL -->
 <div class="modalbg" id="arenaModalBg">
   <div class="modal">
-    <h3 class="center">⚔ Arena Gauntlet</h3>
+    <h3 class="center">⚔️ Arena Gauntlet</h3>
     <p class="sub center" id="arenaSub"></p>
+    <div class="gauntlet-info" id="arenaSteps"></div>
+    <div class="battle-scene" id="battleScene"></div>
     <div class="fightlog" id="fightLog"></div>
     <div class="btnrow">
       <button class="b-secondary" onclick="closeArena()">Leave</button>
-      <button class="b-primary" id="arenaNext" onclick="arenaNext()">Next Fight</button>
+      <button class="b-success" id="arenaNext" onclick="arenaNext()">Next Fight</button>
     </div>
   </div>
 </div>
 
-<footer>Axie Breeder: Lunacia Genesis — Vibeathon 2026 prototype. Fan-made, AI-vibe-coded. Axie Infinity is a trademark of Sky Mavis.</footer>
+<!-- QUESTS MODAL -->
+<div class="modalbg" id="questsModalBg">
+  <div class="modal">
+    <h3>📋 Daily Quests</h3>
+    <p class="sub" id="questsSub">Resets every day. Claim rewards as you complete them.</p>
+    <div class="quest-grid" id="questGrid"></div>
+    <div class="btnrow"><button class="b-secondary" onclick="closeQuests()">Close</button></div>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="modalbg" id="settingsModalBg">
+  <div class="modal">
+    <h3>⚙️ Settings</h3>
+    <div class="setrow"><span>🔊 Sound effects</span><div class="toggle on" id="soundToggle" onclick="toggleSound()"><i></i></div></div>
+    <div class="setrow"><span>🎓 Show tutorial again</span><button class="danger-link" onclick="replayTutorial()">Replay</button></div>
+    <div class="setrow"><span>💀 Reset progress<br><small style="color:var(--dim)">Wipes all Axies, SLP, trophies</small></span><button class="danger-link" onclick="resetSave()">Reset</button></div>
+    <div class="btnrow"><button class="b-secondary" onclick="closeSettings()">Close</button></div>
+  </div>
+</div>
+
+<!-- WELCOME MODAL -->
+<div class="modalbg" id="welcomeModalBg">
+  <div class="modal center">
+    <div style="font-size:44px">🧬</div>
+    <h3>Welcome to the Gene Forge</h3>
+    <p class="sub">Breed Axies, roll their genes, and climb the Arena leaderboard.</p>
+    <ol class="steps">
+      <li>🧬 Your slots are pre-loaded — hit <b>BREED</b> right away</li>
+      <li>⚔️ Send newborns to the <b>Arena</b> to earn SLP + trophies</li>
+      <li>✨ Chase <b>pure bloodlines</b> (all 6 parts matching class) for <b>Legendary</b> rarity</li>
+      <li>📋 Complete <b>daily quests</b> (top-right 📋) for bonus SLP</li>
+    </ol>
+    <div class="btnrow"><button class="b-primary" onclick="closeWelcome()">Start Breeding</button></div>
+  </div>
+</div>
+
+<div id="toasts"></div>
+
+<footer>Axie Breeder: Lunacia Genesis — Vibeathon 2026 fan-made prototype · AI-vibe-coded, zero external assets · Axie Infinity is a trademark of Sky Mavis</footer>
 
 <script>
 'use strict';
 
-/* ================= DATA ================= */
+/* ================= CONFIG ================= */
+const SAVE_KEY = 'lunaciaGenesisV2';
+const BREED_COSTS = [200, 300, 500, 800, 1300, 2100, 3400, 5500, 8900];
+
 const CLASSES = {
-  beast:    { name:'Beast',    color:'#f59e0b', stats:{hp:61, speed:61, skill:41, morale:41} },
-  bug:      { name:'Bug',      color:'#84cc16', stats:{hp:67, speed:55, skill:41, morale:41} },
-  bird:     { name:'Bird',     color:'#ec4899', stats:{hp:55, speed:61, skill:41, morale:47} },
-  plant:    { name:'Plant',    color:'#22c55e', stats:{hp:61, speed:41, skill:41, morale:61} },
-  aquatic:  { name:'Aquatic',  color:'#3b82f6', stats:{hp:61, speed:55, skill:41, morale:47} },
-  reptile:  { name:'Reptile',  color:'#a855f7', stats:{hp:55, speed:61, skill:41, morale:47} },
-  dusk:     { name:'Dusk',     color:'#475569', stats:{hp:67, speed:55, skill:47, morale:41} },
-  dawn:     { name:'Dawn',     color:'#22d3ee', stats:{hp:55, speed:67, skill:41, morale:41} },
-  mech:     { name:'Mech',     color:'#94a3b8', stats:{hp:61, speed:61, skill:41, morale:47} },
+  beast:   { name:'Beast',   color:'#f59e0b', stats:{hp:61, speed:61, skill:31, morale:31} },
+  bug:     { name:'Bug',     color:'#84cc16', stats:{hp:67, speed:55, skill:31, morale:31} },
+  bird:    { name:'Bird',    color:'#ec4899', stats:{hp:55, speed:61, skill:31, morale:35} },
+  plant:   { name:'Plant',   color:'#22c55e', stats:{hp:61, speed:41, skill:31, morale:35} },
+  aquatic: { name:'Aquatic', color:'#3b82f6', stats:{hp:61, speed:55, skill:31, morale:35} },
+  reptile: { name:'Reptile', color:'#a855f7', stats:{hp:55, speed:61, skill:31, morale:35} },
 };
 const CLASS_KEYS = Object.keys(CLASSES);
 
 const PART_SLOTS = ['eyes','ears','mouth','horn','back','tail'];
 const PART_POOL = {
-  eyes:  [['Puppy','beast'],['Innocent Lamb','plant'],['Papi','bug'],['Rainbowfish','aquatic'],['Hornbill','bird'],['Compact Scope','mech'],['DreamyMascot','dusk'],['Guraffe','reptile'],['Retro Fetch','dawn']],
-  ears:  [['Foxtail','beast'],['Nutcracker','bug'],['Bird Ear','bird'],['Snailshell','aquatic'],['Papilon','plant'],['Hummingwing','dawn'],['Mecha Horn','mech'],['Little Sage','dusk'],['Yasune','reptile']],
-  mouth: [['Papi','bug'],['Tiny Turtle','reptile'],['Herbert','plant'],['Guppy','aquatic'],['Spiraling Carpo','aquatic'],['Russell','beast'],['Doubletalk','bird'],['Piggy','plant'],['Nimo','dawn']],
-  horn:  [['Single Hornnut','beast'],['Coral Digger','aquatic'],['Beechnut','plant'],['Mystic Flower','plant'],['Origami','bird'],['Dual Blade','mech'],['Scaly Spear','reptile'],['Cuckoo','dusk'],['Water Pulse','dawn']],
-  back:  [['Goldfish','aquatic'],['Anemone','aquatic'],['Rose Bud','plant'],['Lil Leaf','plant'],['Beech Stake','bug'],['Jaguar Paw','beast'],['Feather Spear','bird'],['Hermit Crab','dusk'],['Mecha Shell','mech']],
-  tail:  [['Shrimp','aquatic'],['Fish Hook','aquatic'],['Gecko','reptile'],['Jaguar','beast'],['Yamato','beast'],['Swallow','bird'],['Raspberry','plant'],['Panpipe','plant'],['Turbine','mech']],
+  eyes:  [['Puppy','beast'],['Innocent Lamb','plant'],['Papi','bug'],['Rainbowfish','aquatic'],['Hornbill','bird'],['Compact Scope','reptile'],['Dreamy Mascot','dusk'],['Guraffe','dawn'],['Retro Fetch','beast'],['Tri-Fin','aquatic']],
+  ears:  [['Foxtail','beast'],['Nutcracker','bug'],['Bird Ear','bird'],['Snailshell','aquatic'],['Papilon','plant'],['Hummingwing','dawn'],['Mecha Horn','reptile'],['Little Sage','dusk'],['Yasune','reptile'],['Cupid','bird']],
+  mouth: [['Papi','bug'],['Tiny Turtle','reptile'],['Herbert','plant'],['Guppy','aquatic'],['Spiral Carp','aquatic'],['Russell','beast'],['Doubletalk','bird'],['Piggy','plant'],['Nimo','dawn'],['Zeal','beast']],
+  horn:  [['Single Hornnut','beast'],['Coral Digger','aquatic'],['Beechnut','plant'],['Mystic Flower','plant'],['Origami','bird'],['Dual Blade','reptile'],['Scaly Spear','reptile'],['Cuckoo','dusk'],['Water Pulse','dawn'],['Antenna','bug']],
+  back:  [['Goldfish','aquatic'],['Anemone','aquatic'],['Rose Bud','plant'],['Lil Leaf','plant'],['Beech Stake','bug'],['Jaguar Paw','beast'],['Feather Spear','bird'],['Hermit Shell','reptile'],['Mecha Shell','reptile'],['Turbine','dusk']],
+  tail:  [['Shrimp','aquatic'],['Fish Hook','aquatic'],['Gecko','reptile'],['Jaguar','beast'],['Yamato','beast'],['Swallow','bird'],['Raspberry','plant'],['Panpipe','plant'],['Turbine','reptile'],['Cylinder','bug']],
 };
 
-const NAME_A = ['Lu','Axa','Mo','Zi','Ki','Pip','Nia','Ter','Vex','Sol','Ny','Gala','Bram','Yuki'];
-const NAME_B = ['naci','mo','ra','li','ppo','ka','shi','to','nny','ma','lo','chi','ba'];
-const NAME_C = ['of Lunacia','the Bold','Prime','II','III','IV','Dawnborn','Duskwalker','the Pure','Rex','Nova','Mk-II'];
+const NAME_A = ['Lu','Axa','Mo','Zi','Ki','Pip','Nia','Ter','Vex','Sol','Ny','Gala','Bram','Yuki','Ryn','Odo','Kai','Sera'];
+const NAME_B = ['naci','mo','ra','li','ppo','ka','shi','to','nny','ma','lo','chi','ba','xu','lume','ve'];
+const NAME_C = ['of Lunacia','the Bold','Prime','II','III','IV','Dawnborn','Duskwalker','the Pure','Rex','Nova','Mk-II','the Swift','the Wise'];
 
-const BREED_COSTS = [200, 300, 500, 800, 1300, 2100, 3400, 5500, 8900];
+/* ================= SOUND ================= */
+const Snd = {
+  ctx: null, tried: false,
+  init() {
+    if (this.tried) return;
+    this.tried = true;
+    try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) { this.ctx = null; }
+  },
+  tone(f, dur, type, vol, when) {
+    if (!S || !S.settings.sound || !this.ctx) return;
+    try {
+      if (this.ctx.state === 'suspended') { this.ctx.resume(); return; }
+      const t = this.ctx.currentTime + (when || 0);
+      const o = this.ctx.createOscillator(), g = this.ctx.createGain();
+      o.type = type || 'sine'; o.frequency.value = f;
+      g.gain.setValueAtTime(vol || 0.12, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+      o.connect(g); g.connect(this.ctx.destination);
+      o.start(t); o.stop(t + dur + 0.02);
+    } catch(e){}
+  },
+  click()  { this.tone(660, .05, 'triangle', .08); },
+  tick()   { this.tone(440 + Math.random()*300, .03, 'square', .03); },
+  lock()   { this.tone(880, .09, 'sine', .1); },
+  reveal() { [523,659,784,1047].forEach((f,i)=>this.tone(f,.16,'sine',.1,i*0.09)); },
+  win()    { [523,659,784,1047,1319].forEach((f,i)=>this.tone(f,.14,'triangle',.11,i*0.08)); },
+  lose()   { [392,311,247].forEach((f,i)=>this.tone(f,.2,'sawtooth',.06,i*0.12)); },
+  hit()    { this.tone(180+Math.random()*80, .07, 'square', .07); },
+  crit()   { this.tone(120, .12, 'sawtooth', .12); this.tone(90, .15, 'sawtooth', .1, .05); },
+  cash()   { this.tone(1318,.07,'sine',.09); this.tone(1760,.1,'sine',.09,.07); },
+  err()    { this.tone(220, .12, 'sawtooth', .07); },
+};
 
 /* ================= STATE ================= */
-let S = { slp: 1000, axies: [], nextId: 1, slotA: null, slotB: null, arena: null };
+let S = null;
+let pendingChild = null;
 
-function save() { try { localStorage.setItem('lunaciaGenesis', JSON.stringify(S)); } catch(e){} }
+function defaultState() {
+  return {
+    v: 2, slp: 1000, axies: [], nextId: 1, slotA: null, slotB: null,
+    totalWins: 0, totalBreeds: 0, totalMutations: 0,
+    achievements: {},
+    quests: { date: '', list: [] },
+    settings: { sound: true },
+    seenWelcome: false,
+    arena: null,
+  };
+}
+function save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch(e){} }
 function load() {
+  S = defaultState();
   try {
-    const raw = localStorage.getItem('lunaciaGenesis');
-    if (raw) { S = JSON.parse(raw); if (S.axies && S.axies.length) return; }
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && parsed.v === 2 && Array.isArray(parsed.axies) && parsed.axies.length) {
+        S = Object.assign(defaultState(), parsed);
+        return;
+      }
+    }
   } catch(e){}
   seedCollection();
 }
 function seedCollection() {
   S.slp = 1000;
-  S.axies = [ randomAxie('Starter'), randomAxie('Starter') ];
-  S.slotA = S.axies[0].id; S.slotB = S.axies[1].id;
+  const a = randomAxie(true), b = randomAxie(true);
+  S.axies = [a, b];
+  S.slotA = a.id; S.slotB = b.id;
 }
 
-/* ================= AXIE GEN ================= */
-function randPart(slot) { return PART_POOL[slot][Math.floor(Math.random()*PART_POOL[slot].length)]; }
-function randomAxie(tag) {
-  const cls = CLASS_KEYS[Math.floor(Math.random()*CLASS_KEYS.length)];
+/* ================= GENETICS ================= */
+const rnd = n => Math.floor(Math.random() * n);
+const pick = arr => arr[rnd(arr.length)];
+
+function randPart(slot) { return pick(PART_POOL[slot]); }
+function partClass(slot, name) { const e = PART_POOL[slot].find(p => p[0] === name); return e ? e[1] : 'beast'; }
+
+function genName() {
+  return pick(NAME_A) + pick(NAME_B) + (Math.random() < 0.35 ? ' ' + pick(NAME_C) : '');
+}
+
+function randomAxie(isStarter, gen) {
+  const cls = pick(CLASS_KEYS);
   const parts = {}, genes = {};
   for (const slot of PART_SLOTS) {
     const p = randPart(slot);
-    const hidden = randPart(slot);
     parts[slot] = p[0];
-    genes[slot] = { d1: p[0], d2: hidden[0] };
+    genes[slot] = { d1: p[0], d2: randPart(slot)[0] };
   }
   const base = CLASSES[cls].stats;
-  const stats = {
-    hp: Math.round(base.hp + (Math.random()*14-7)),
-    speed: Math.round(base.speed + (Math.random()*14-7)),
-    skill: Math.round(base.skill + (Math.random()*14-7)),
-    morale: Math.round(base.morale + (Math.random()*14-7)),
-  };
+  const j = () => Math.random() * 14 - 7;
   return {
-    id: S.nextId++,
-    name: genName(),
-    class: cls,
-    parts, genes, stats,
-    breedCount: 0,
-    parents: tag === 'Starter' ? [] : [0,0],
-    trophies: 0,
-    born: Date.now(),
+    id: S.nextId++, name: genName(), class: cls, parts, genes,
+    stats: { hp: Math.round(base.hp+j()), speed: Math.round(base.speed+j()), skill: Math.round(base.skill+j()), morale: Math.round(base.morale+j()) },
+    breedCount: 0, parents: isStarter ? [] : [0,0],
+    gen: gen || 0, trophies: 0, wins: 0, born: Date.now(),
   };
-}
-function genName() {
-  return NAME_A[Math.floor(Math.random()*NAME_A.length)]
-       + NAME_B[Math.floor(Math.random()*NAME_B.length)]
-       + (Math.random()<0.35 ? ' ' + NAME_C[Math.floor(Math.random()*NAME_C.length)] : '');
 }
 
-function partClass(slot, partName) {
-  const e = PART_POOL[slot].find(p => p[0] === partName);
-  return e ? e[1] : 'beast';
+function purity(a) {
+  let n = 0;
+  for (const s of PART_SLOTS) if (partClass(s, a.parts[s]) === a.class) n++;
+  return n;
 }
 function axiePower(a) {
   const s = a.stats;
-  let p = s.hp + s.speed + s.skill + s.morale;
-  for (const slot of PART_SLOTS) if (partClass(slot, a.parts[slot]) === a.class) p += 6;
-  return p;
+  return s.hp + s.speed + s.skill + s.morale + purity(a) * 6;
+}
+function rarityOf(a) {
+  const score = axiePower(a) + purity(a) * 15;
+  if (score >= 380) return { key:'legend', label:'Legendary', cls:'rar-legend' };
+  if (score >= 340) return { key:'epic', label:'Epic', cls:'rar-epic' };
+  if (score >= 300) return { key:'rare', label:'Rare', cls:'rar-rare' };
+  return { key:'common', label:'Common', cls:'rar-common' };
 }
 
-/* ================= BREEDING ================= */
-function breedCost(ax) {
-  return BREED_COSTS[Math.min(ax.breedCount, BREED_COSTS.length-1)];
-}
+function breedCost(ax) { return BREED_COSTS[Math.min(ax.breedCount, BREED_COSTS.length-1)]; }
 function pairCost(a, b) { return breedCost(a) + breedCost(b); }
-function areSiblings(a, b) {
-  if (!a.parents.length || !b.parents.length) return false;
-  return a.parents.some(p => p && b.parents.includes(p));
+function areBloodBlocked(a, b) {
+  if (!a || !b || a.id === b.id) return true;
+  if (a.parents.includes(b.id) || b.parents.includes(a.id)) return true;      // parent-child
+  if (a.parents.length && b.parents.length && a.parents.some(p => p && b.parents.includes(p))) return true; // siblings
+  return false;
 }
 function canBreed(a, b) {
-  if (!a || !b || a.id === b.id) return { ok:false, why:'Pick two different Axies.' };
-  if (areSiblings(a, b)) return { ok:false, why:'Bloodline blocked: siblings can never breed.' };
-  const c = pairCost(a,b);
-  if (c > S.slp) return { ok:false, why:'Not enough SLP — win Arena fights to earn more (' + c + ' needed).' };
+  if (!a || !b) return { ok:false, why:'Pick two Axies first.' };
+  if (a.id === b.id) return { ok:false, why:'An Axie cannot breed with itself.' };
+  if (areBloodBlocked(a, b)) return { ok:false, why:'🚫 Bloodline blocked: siblings and parent-child pairs can never breed.' };
+  const c = pairCost(a, b);
+  if (c > S.slp) return { ok:false, why:'Not enough SLP (' + c + ' needed) — win Arena fights or quests to earn more.' };
   return { ok:true };
 }
 
 function breed(a, b) {
-  const child = {};
   const cls = Math.random() < 0.5 ? a.class : b.class;
   const parts = {}, genes = {};
+  let mutations = 0;
   for (const slot of PART_SLOTS) {
     const donor = Math.random() < 0.5 ? a : b;
-    const useD1 = Math.random() < 0.7;
-    let chosen = useD1 ? donor.genes[slot].d1 : donor.genes[slot].d2;
-    if (Math.random() < 0.03) chosen = randPart(slot)[0]; // mutation
+    let chosen = Math.random() < 0.7 ? donor.genes[slot].d1 : donor.genes[slot].d2;
+    if (Math.random() < 0.03) { chosen = randPart(slot)[0]; mutations++; }
     parts[slot] = chosen;
-    const hiddenDonor = Math.random() < 0.5 ? a : b;
-    genes[slot] = { d1: chosen, d2: hiddenDonor.genes[slot].d2 };
+    const hid = Math.random() < 0.5 ? a : b;
+    genes[slot] = { d1: chosen, d2: hid.genes[slot].d2 };
   }
-  const avg = k => Math.round((a.stats[k] + b.stats[k]) / 2 + (Math.random()*12-6));
-  const stats = { hp: avg('hp'), speed: avg('speed'), skill: avg('skill'), morale: avg('morale') };
+  const avg = k => Math.max(20, Math.round((a.stats[k] + b.stats[k]) / 2 + (Math.random()*12 - 6)));
   a.breedCount++; b.breedCount++;
   return {
-    id: S.nextId++,
-    name: genName(),
-    class: cls, parts, genes, stats,
+    id: S.nextId++, name: genName(), class: cls, parts, genes,
+    stats: { hp:avg('hp'), speed:avg('speed'), skill:avg('skill'), morale:avg('morale') },
     breedCount: 0, parents: [a.id, b.id],
-    trophies: 0, born: Date.now(),
+    gen: Math.max(a.gen, b.gen) + 1,
+    trophies: 0, wins: 0, born: Date.now(),
+    _mutations: mutations,
   };
 }
 
-/* ================= ARENA ================= */
-function challenger(power) {
-  const cls = CLASS_KEYS[Math.floor(Math.random()*CLASS_KEYS.length)];
-  const base = CLASSES[cls].stats;
-  const jitter = () => Math.random()*30-15;
-  const stats = {
-    hp: Math.round(base.hp + 18 + jitter()),
-    speed: Math.round(base.speed + 18 + jitter()),
-    skill: Math.round(base.skill + 18 + jitter()),
-    morale: Math.round(base.morale + 18 + jitter()),
-  };
-  return { name: 'Wild ' + genName(), class: cls, stats };
-}
-
-function fightSim(me, foe) {
-  const lines = [];
-  let meHp = me.stats.hp * 6, foeHp = foe.stats.hp * 6;
-  const order = me.stats.speed >= foe.stats.speed ? [me,foe] : [foe,me];
-  let turn = 1;
-  while (meHp > 0 && foeHp > 0 && turn <= 12) {
-    for (const atk of order) {
-      if (meHp <= 0 || foeHp <= 0) break;
-      const isMe = atk === me;
-      const target = isMe ? foe : me;
-      let dmg = (atk.stats.skill * 0.9 + 8) * (0.8 + Math.random()*0.5);
-      const crit = Math.random() < atk.stats.morale/220;
-      if (crit) dmg *= 1.7;
-      dmg = Math.round(dmg);
-      if (isMe) { foeHp -= dmg; lines.push({t:'me', txt:`T${turn} ${me.name} strikes ${foe.name} for ${dmg}${crit ? ' CRITICAL!' : ''}`}); }
-      else { meHp -= dmg; lines.push({t:'foe', txt:`T${turn} ${foe.name} hits ${me.name} for ${dmg}${crit ? ' CRITICAL!' : ''}`}); }
-    }
-    turn++;
-  }
-  const win = foeHp <= 0 && meHp > 0;
-  return { win, lines };
-}
-
-function arenaOpponentPower(myPower, idx) { return myPower - 20 + idx * 14; }
+function releaseValue(a) { return Math.round(axiePower(a) * 0.5); }
 
 /* ================= AVATAR SVG ================= */
-function eyeShape(kind) {
-  switch (kind) {
-    case 'Puppy': return `<circle cx="14" cy="8" r="7" fill="#fff"/><circle cx="14" cy="9" r="3.4" fill="#101418"/><circle cx="46" cy="8" r="7" fill="#fff"/><circle cx="46" cy="9" r="3.4" fill="#101418"/>`;
-    case 'Innocent Lamb': return `<ellipse cx="14" cy="8" rx="8" ry="9" fill="#fff"/><circle cx="14" cy="8" r="2.8" fill="#101418"/><ellipse cx="46" cy="8" rx="8" ry="9" fill="#fff"/><circle cx="46" cy="8" r="2.8" fill="#101418"/>`;
-    case 'Papi': return `<path d="M6 8 Q14 0 22 8 Q14 14 6 8Z" fill="#fff"/><circle cx="14" cy="7.5" r="2.4" fill="#101418"/><path d="M38 8 Q46 0 54 8 Q46 14 38 8Z" fill="#fff"/><circle cx="46" cy="7.5" r="2.4" fill="#101418"/>`;
-    case 'Rainbowfish': return `<circle cx="14" cy="8" r="6.5" fill="#7dd3fc"/><circle cx="14" cy="8" r="3" fill="#101418"/><circle cx="46" cy="8" r="6.5" fill="#7dd3fc"/><circle cx="46" cy="8" r="3" fill="#101418"/>`;
-    case 'Hornbill': return `<rect x="9" y="4" width="10" height="8" rx="3" fill="#fff"/><circle cx="14" cy="8" r="2.6" fill="#101418"/><rect x="41" y="4" width="10" height="8" rx="3" fill="#fff"/><circle cx="46" cy="8" r="2.6" fill="#101418"/>`;
-    default: return `<circle cx="14" cy="8" r="6" fill="#fff"/><circle cx="14" cy="8" r="2.8" fill="#101418"/><circle cx="46" cy="8" r="6" fill="#fff"/><circle cx="46" cy="8" r="2.8" fill="#101418"/>`;
+function eyeShape(k) {
+  switch (k) {
+    case 'Puppy': return '<circle cx="14" cy="9" r="7" fill="#fff"/><circle cx="14" cy="10" r="3.4" fill="#101418"/><circle cx="46" cy="9" r="7" fill="#fff"/><circle cx="46" cy="10" r="3.4" fill="#101418"/>';
+    case 'Innocent Lamb': return '<ellipse cx="14" cy="9" rx="8" ry="9" fill="#fff"/><circle cx="14" cy="9" r="2.8" fill="#101418"/><ellipse cx="46" cy="9" rx="8" ry="9" fill="#fff"/><circle cx="46" cy="9" r="2.8" fill="#101418"/>';
+    case 'Papi': return '<path d="M6 9 Q14 1 22 9 Q14 15 6 9Z" fill="#fff"/><circle cx="14" cy="8.5" r="2.4" fill="#101418"/><path d="M38 9 Q46 1 54 9 Q46 15 38 9Z" fill="#fff"/><circle cx="46" cy="8.5" r="2.4" fill="#101418"/>';
+    case 'Rainbowfish': return '<circle cx="14" cy="9" r="6.5" fill="#7dd3fc"/><circle cx="14" cy="9" r="3" fill="#101418"/><circle cx="46" cy="9" r="6.5" fill="#7dd3fc"/><circle cx="46" cy="9" r="3" fill="#101418"/>';
+    case 'Hornbill': return '<rect x="9" y="5" width="10" height="8" rx="3" fill="#fff"/><circle cx="14" cy="9" r="2.6" fill="#101418"/><rect x="41" y="5" width="10" height="8" rx="3" fill="#fff"/><circle cx="46" cy="9" r="2.6" fill="#101418"/>';
+    case 'Compact Scope': return '<circle cx="14" cy="9" r="6" fill="#cbd5e1"/><circle cx="14" cy="9" r="2.6" fill="#0ea5e9"/><circle cx="46" cy="9" r="6" fill="#cbd5e1"/><circle cx="46" cy="9" r="2.6" fill="#0ea5e9"/>';
+    default: return '<circle cx="14" cy="9" r="6" fill="#fff"/><circle cx="14" cy="9" r="2.8" fill="#101418"/><circle cx="46" cy="9" r="6" fill="#fff"/><circle cx="46" cy="9" r="2.8" fill="#101418"/>';
   }
 }
-function hornShape(kind, color) {
-  switch (kind) {
-    case 'Single Hornnut': return `<path d="M30 12 L26 0 L34 0 Z" fill="${color}"/>`;
-    case 'Coral Digger': return `<path d="M30 12 L24 -2 L30 2 L36 -2 Z" fill="${color}"/>`;
-    case 'Beechnut': return `<circle cx="30" cy="4" r="5" fill="${color}"/>`;
-    case 'Mystic Flower': return `<circle cx="30" cy="4" r="4" fill="#f9a8d4"/><circle cx="30" cy="4" r="1.6" fill="#fde68a"/>`;
-    case 'Origami': return `<path d="M30 12 L22 2 L38 2 Z" fill="${color}"/>`;
-    default: return `<path d="M30 12 L25 0 L35 0 Z" fill="${color}" opacity="0.85"/>`;
+function hornShape(k, c) {
+  switch (k) {
+    case 'Single Hornnut': return '<path d="M30 13 L26 1 L34 1 Z" fill="'+c+'"/>';
+    case 'Coral Digger': return '<path d="M30 13 L24 -1 L30 3 L36 -1 Z" fill="'+c+'"/>';
+    case 'Beechnut': return '<circle cx="30" cy="5" r="5" fill="'+c+'"/>';
+    case 'Mystic Flower': return '<circle cx="30" cy="5" r="4" fill="#f9a8d4"/><circle cx="30" cy="5" r="1.6" fill="#fde68a"/>';
+    case 'Origami': return '<path d="M30 13 L22 3 L38 3 Z" fill="'+c+'"/>';
+    case 'Dual Blade': return '<path d="M26 13 L22 2 L28 4 Z M34 13 L38 2 L32 4 Z" fill="'+c+'"/>';
+    default: return '<path d="M30 13 L25 1 L35 1 Z" fill="'+c+'" opacity="0.85"/>';
   }
 }
-function earShape(kind, color) {
-  switch (kind) {
-    case 'Foxtail': return `<path d="M8 24 Q0 14 6 6 L12 20Z" fill="${color}"/><path d="M52 24 Q60 14 54 6 L48 20Z" fill="${color}"/>`;
-    case 'Bird Ear': return `<path d="M8 26 Q2 18 8 12 L12 24Z" fill="${color}"/><path d="M52 26 Q58 18 52 12 L48 24Z" fill="${color}"/>`;
-    default: return `<circle cx="7" cy="22" r="6" fill="${color}" opacity="0.7"/><circle cx="53" cy="22" r="6" fill="${color}" opacity="0.7"/>`;
+function earShape(k, c) {
+  switch (k) {
+    case 'Foxtail': return '<path d="M8 24 Q0 14 6 7 L13 20Z" fill="'+c+'"/><path d="M52 24 Q60 14 54 7 L47 20Z" fill="'+c+'"/>';
+    case 'Bird Ear': return '<path d="M8 26 Q2 18 8 12 L12 24Z" fill="'+c+'"/><path d="M52 26 Q58 18 52 12 L48 24Z" fill="'+c+'"/>';
+    case 'Nutcracker': return '<rect x="4" y="14" width="7" height="12" rx="3" fill="'+c+'"/><rect x="49" y="14" width="7" height="12" rx="3" fill="'+c+'"/>';
+    default: return '<circle cx="7" cy="22" r="6" fill="'+c+'" opacity="0.7"/><circle cx="53" cy="22" r="6" fill="'+c+'" opacity="0.7"/>';
   }
 }
-function tailShape(kind, color) {
-  switch (kind) {
-    case 'Shrimp': return `<path d="M60 40 Q74 38 72 28 Q70 20 62 24" fill="none" stroke="${color}" stroke-width="7" stroke-linecap="round"/>`;
-    case 'Fish Hook': return `<path d="M60 42 Q78 42 74 30" fill="none" stroke="${color}" stroke-width="6" stroke-linecap="round"/>`;
-    case 'Jaguar': return `<path d="M60 44 Q76 48 72 60" fill="none" stroke="${color}" stroke-width="9" stroke-linecap="round"/>`;
-    default: return `<path d="M60 42 Q75 44 70 30" fill="none" stroke="${color}" stroke-width="7" stroke-linecap="round"/>`;
+function tailShape(k, c) {
+  switch (k) {
+    case 'Shrimp': return '<path d="M60 40 Q75 38 73 27 Q71 19 63 24" fill="none" stroke="'+c+'" stroke-width="7" stroke-linecap="round"/>';
+    case 'Fish Hook': return '<path d="M60 42 Q79 42 75 29" fill="none" stroke="'+c+'" stroke-width="6" stroke-linecap="round"/>';
+    case 'Jaguar': return '<path d="M60 44 Q77 48 73 61" fill="none" stroke="'+c+'" stroke-width="9" stroke-linecap="round"/>';
+    case 'Gecko': return '<path d="M60 44 Q78 46 74 58 Q71 64 64 60" fill="none" stroke="'+c+'" stroke-width="6" stroke-linecap="round"/>';
+    default: return '<path d="M60 42 Q76 44 71 30" fill="none" stroke="'+c+'" stroke-width="7" stroke-linecap="round"/>';
   }
 }
-function backShape(kind, color) {
-  switch (kind) {
-    case 'Goldfish': return `<circle cx="18" cy="52" r="7" fill="${color}" opacity="0.85"/><circle cx="42" cy="52" r="7" fill="${color}" opacity="0.85"/>`;
-    case 'Rose Bud': return `<circle cx="30" cy="54" r="8" fill="#f472b6"/>`;
-    case 'Lil Leaf': return `<ellipse cx="30" cy="54" rx="9" ry="4" fill="${color}"/>`;
-    default: return `<path d="M22 50 L26 40 L30 50Z M34 50 L38 40 L42 50Z" fill="${color}" opacity="0.8"/>`;
+function backShape(k, c) {
+  switch (k) {
+    case 'Goldfish': return '<circle cx="17" cy="53" r="7" fill="'+c+'" opacity="0.85"/><circle cx="43" cy="53" r="7" fill="'+c+'" opacity="0.85"/>';
+    case 'Rose Bud': return '<circle cx="30" cy="55" r="8" fill="#f472b6"/>';
+    case 'Lil Leaf': return '<ellipse cx="30" cy="55" rx="10" ry="4" fill="'+c+'"/>';
+    case 'Anemone': return '<circle cx="30" cy="55" r="6" fill="#fbbf24"/><circle cx="22" cy="52" r="3" fill="#fbbf24"/><circle cx="38" cy="52" r="3" fill="#fbbf24"/>';
+    default: return '<path d="M22 51 L26 41 L30 51Z M34 51 L38 41 L42 51Z" fill="'+c+'" opacity="0.8"/>';
   }
 }
 function axieSVG(a, size) {
   const c = CLASSES[a.class].color;
-  const dark = 'rgba(0,0,0,0.25)';
-  return `<svg width="${size}" height="${size}" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
-    ${earShape(a.parts.ears, c)}
-    ${backShape(a.parts.back, c)}
-    <ellipse cx="30" cy="40" rx="26" ry="24" fill="${c}" stroke="${dark}" stroke-width="2"/>
-    <ellipse cx="30" cy="52" rx="16" ry="10" fill="rgba(255,255,255,0.14)"/>
-    ${hornShape(a.parts.horn, c)}
-    ${eyeShape(a.parts.eyes)}
-    <path d="M22 22 Q30 28 38 22" fill="none" stroke="rgba(0,0,0,0.35)" stroke-width="2" stroke-linecap="round"/>
-    ${a.parts.mouth === 'Papi' ? `<path d="M24 18 Q30 24 36 18" fill="none" stroke="#0e7490" stroke-width="3" stroke-linecap="round"/>` : `<path d="M25 20 Q30 26 35 20" fill="none" stroke="rgba(0,0,0,0.4)" stroke-width="2" stroke-linecap="round"/>`}
-    <circle cx="6" cy="66" r="4" fill="${c}" opacity="0.5"/><circle cx="54" cy="66" r="4" fill="${c}" opacity="0.5"/>
-    ${tailShape(a.parts.tail, c)}
-  </svg>`;
+  const dark = 'rgba(0,0,0,0.28)';
+  return '<svg class="avatar" width="'+size+'" height="'+size+'" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="'+a.name+'">'
+    + earShape(a.parts.ears, c)
+    + backShape(a.parts.back, c)
+    + '<ellipse cx="30" cy="41" rx="26" ry="24" fill="'+c+'" stroke="'+dark+'" stroke-width="2"/>'
+    + '<ellipse cx="30" cy="53" rx="16" ry="10" fill="rgba(255,255,255,0.15)"/>'
+    + hornShape(a.parts.horn, c)
+    + eyeShape(a.parts.eyes)
+    + '<path d="M22 23 Q30 29 38 23" fill="none" stroke="rgba(0,0,0,0.35)" stroke-width="2" stroke-linecap="round"/>'
+    + (a.parts.mouth === 'Papi' || a.parts.mouth === 'Zeal'
+        ? '<path d="M24 19 Q30 25 36 19" fill="none" stroke="#0e7490" stroke-width="3" stroke-linecap="round"/>'
+        : '<path d="M25 21 Q30 27 35 21" fill="none" stroke="rgba(0,0,0,0.4)" stroke-width="2" stroke-linecap="round"/>')
+    + '<circle cx="6" cy="67" r="4" fill="'+c+'" opacity="0.5"/><circle cx="54" cy="67" r="4" fill="'+c+'" opacity="0.5"/>'
+    + tailShape(a.parts.tail, c)
+    + '</svg>';
 }
 
-/* ================= RENDER ================= */
-function fmtAxie(a) { return axieSVG(a, 110); }
+/* ================= ACHIEVEMENTS ================= */
+const ACHV = [
+  { id:'first',   ic:'🥚', nm:'First Spark',     ds:'Breed your first Axie',        rw:100, test:()=>S.totalBreeds>=1 },
+  { id:'gen2',    ic:'🌳', nm:'Bloodline',        ds:'Own a Gen 2+ Axie',            rw:100, test:()=>S.axies.some(a=>a.gen>=2) },
+  { id:'gen3',    ic:'🌲', nm:'Dynasty',          ds:'Own a Gen 3+ Axie',            rw:200, test:()=>S.axies.some(a=>a.gen>=3) },
+  { id:'pure6',   ic:'💎', nm:'The Purist',       ds:'Breed a 6/6 pure Axie',        rw:300, test:()=>S.axies.some(a=>purity(a)===6) },
+  { id:'pwr400',  ic:'💪', nm:'Power Overwhelming', ds:'Breed an Axie with 400+ power', rw:300, test:()=>S.axies.some(a=>axiePower(a)>=400) },
+  { id:'sweep',   ic:'⚡', nm:'Gauntlet Sweep',   ds:'Win all 5 fights in one run',  rw:250, test:()=>S.achievements._swept },
+  { id:'wins10',  ic:'⚔️', nm:'Gladiator',       ds:'Win 10 arena fights total',    rw:150, test:()=>S.totalWins>=10 },
+  { id:'mutant',  ic:'🧪', nm:'Mutation!',        ds:'Roll a mutation part',        rw:100, test:()=>S.totalMutations>=1 },
+  { id:'rich',    ic:'💰', nm:'SLP Baron',        ds:'Hold 2000 SLP at once',       rw:150, test:()=>S.slp>=2000 },
+  { id:'col10',   ic:'🏠', nm:'Full House',       ds:'Own 10 Axies at once',        rw:200, test:()=>S.axies.length>=10 },
+  { id:'legend',  ic:'🌟', nm:'Living Legend',    ds:'Breed a Legendary rarity Axie', rw:500, test:()=>S.axies.some(a=>rarityOf(a).key==='legend') },
+];
+function checkAchievements() {
+  for (const a of ACHV) {
+    if (!S.achievements[a.id] && a.test()) {
+      S.achievements[a.id] = true;
+      S.slp += a.rw;
+      toast('⭐ Achievement: ' + a.nm, a.ds + ' · +' + a.rw + ' SLP', 'gold');
+      Snd.reveal();
+    }
+  }
+}
 
-function renderParent(slot) {
-  const el = slot === 'A' ? document.getElementById('parentCardA') : document.getElementById('parentCardB');
-  const id = slot === 'A' ? S.slotA : S.slotB;
+/* ================= QUESTS ================= */
+const QUEST_POOL = [
+  { id:'qbreed1', ic:'🧬', nm:'Breeder',    ds:'Breed 1 Axie',            goal:1, rw:150, prog:()=>S.quests._breeds||0 },
+  { id:'qbreed3', ic:'🧬', nm:'Gene Forge', ds:'Breed 3 Axies',           goal:3, rw:250, prog:()=>S.quests._breeds||0 },
+  { id:'qwin2',   ic:'⚔️', nm:'Fighter',    ds:'Win 2 arena fights',      goal:2, rw:120, prog:()=>S.quests._wins||0 },
+  { id:'qwin4',   ic:'⚔️', nm:'Champion',   ds:'Win 4 arena fights',      goal:4, rw:200, prog:()=>S.quests._wins||0 },
+  { id:'qslp200', ic:'⚡', nm:'Collector',   ds:'Earn 200 SLP',            goal:200, rw:100, prog:()=>S.quests._slp||0 },
+];
+function todayStr() { return new Date().toISOString().slice(0,10); }
+function ensureQuests() {
+  if (S.quests.date === todayStr()) return;
+  const pool = [...QUEST_POOL].sort(()=>Math.random()-0.5).slice(0,3);
+  S.quests = { date: todayStr(), list: pool.map(q=>({ id:q.id, claimed:false })), _breeds:0, _wins:0, _slp:0 };
+}
+function questDefs() { return S.quests.list.map(e => ({ ...QUEST_POOL.find(q=>q.id===e.id), claimed:e.claimed })); }
+function bumpQuest(counter, amount) { ensureQuests(); S.quests[counter] = (S.quests[counter]||0) + amount; }
+function renderQuests() {
+  const el = document.getElementById('questGrid');
+  if (!el) return;
+  const defs = questDefs();
+  el.innerHTML = defs.map(q => {
+    const p = Math.min(q.prog(), q.goal);
+    const done = p >= q.goal;
+    return '<div class="quest'+(done?' done':'')+'">'
+      + '<div class="qtitle">'+q.ic+' '+q.nm+(done?' ✅':'')+'</div>'
+      + '<div class="qdesc">'+q.ds+' · reward '+q.rw+' SLP</div>'
+      + '<div class="qbar"><i style="width:'+Math.round(100*p/q.goal)+'%"></i></div>'
+      + '<div class="qfoot"><span>'+p+' / '+q.goal+'</span></div>'
+      + '<button class="qclaim" '+(done&&!q.claimed?'':'disabled')+' onclick="claimQuest(\''+q.id+'\')">'+(q.claimed?'Claimed':(done?'Claim':'In progress'))+'</button>'
+      + '</div>';
+  }).join('');
+  const total = defs.length, done = defs.filter(q=>q.claimed).length;
+  document.getElementById('questsSub').textContent = 'Daily progress: ' + done + '/' + total + ' claimed · resets at midnight UTC';
+}
+function claimQuest(id) {
+  const e = S.quests.list.find(x=>x.id===id); if (!e || e.claimed) return;
+  const def = QUEST_POOL.find(q=>q.id===id); if (!def) return;
+  const p = def.prog(); if (p < def.goal) return;
+  e.claimed = true; S.slp += def.rw;
+  Snd.cash();
+  toast('📋 Quest complete', def.nm + ' · +' + def.rw + ' SLP', 'green');
+  save(); renderQuests(); renderHeader(); checkAchievements();
+}
+
+/* ================= TOASTS ================= */
+function toast(title, msg, kind) {
+  const box = document.getElementById('toasts');
+  const el = document.createElement('div');
+  el.className = 'toast ' + (kind || '');
+  el.innerHTML = '<b>' + title + '</b>' + (msg || '');
+  box.appendChild(el);
+  setTimeout(() => { el.classList.add('out'); setTimeout(()=>el.remove(), 420); }, 3800);
+}
+
+/* ================= RENDER: HEADER ================= */
+function renderHeader() {
+  document.getElementById('slpBadge').textContent = S.slp.toLocaleString();
+  document.getElementById('axieBadge').textContent = S.axies.length;
+  document.getElementById('trophyBadge').textContent = S.axies.reduce((n,a)=>n+a.trophies,0);
+}
+
+/* ================= RENDER: BREED LAB ================= */
+function statBarsHTML(a) {
+  return ['hp','speed','skill','morale'].map(k =>
+    '<div class="statrow"><div class="lbl">'+k.toUpperCase()+'</div><div class="bar"><i style="width:'+Math.min(100,a.stats[k])+'%"></i></div></div>'
+  ).join('');
+}
+function partsChipsHTML(a) {
+  return PART_SLOTS.map(s => {
+    const pure = partClass(s, a.parts[s]) === a.class;
+    return '<span class="pt'+(pure?' pure':'')+'"><b>'+a.parts[s]+'</b>'+(pure?' ✦':'')+'</span>';
+  }).join('');
+}
+function renderParent(slotLetter) {
+  const el = document.getElementById('parentCard' + slotLetter);
+  const id = slotLetter === 'A' ? S.slotA : S.slotB;
   const a = S.axies.find(x => x.id === id);
   if (!a) {
-    el.innerHTML = `<div class="slotlabel">Slot ${slot}</div><p class="sub" style="padding:30px 0">Select an Axie from your collection</p>`;
+    el.className = 'parent-card';
+    el.innerHTML = '<div class="slotlabel">Slot ' + slotLetter + '</div><div class="emptynote">Click an Axie below<br>to load this slot</div>';
     return;
   }
   const c = CLASSES[a.class];
-  const bars = ['hp','speed','skill','morale'].map(k =>
-    `<div class="statrow"><div class="lbl">${k.toUpperCase()}</div><div class="bar"><i style="width:${Math.min(100, a.stats[k])}%"></i></div></div>`
-  ).join('');
-  const pts = PART_SLOTS.map(s => `<span class="pt"><b>${a.parts[s]}</b>·${c2s(partClass(s, a.parts[s]))}</span>`).join('');
-  el.innerHTML = `
-    <div class="slotlabel">Slot ${slot}</div>
-    <div class="axname">${a.name}</div>
-    <div class="axclass" style="color:${c.color}">${c.name} · Power ${axiePower(a)}</div>
-    ${fmtAxie(a)}
-    <div class="statbars">${bars}</div>
-    <div class="parts-mini">${pts}</div>`;
-}
-function c2s(cls) { return cls.slice(0,3).toUpperCase(); }
-
-function renderCollection() {
-  const el = document.getElementById('collection');
-  el.innerHTML = S.axies.map(a => `
-    <div class="axmini ${a.id===S.slotA?'selA':''} ${a.id===S.slotB?'selB':''}" onclick="pickAxie(${a.id})">
-      ${a.id===S.slotA?'<span class="tagAB">A</span>':''}${a.id===S.slotB?'<span class="tagAB">B</span>':''}
-      ${axieSVG(a, 90)}
-      <div class="mname">${a.name}</div>
-      <div class="mmeta" style="color:${CLASSES[a.class].color}">${CLASSES[a.class].name} · PWR ${axiePower(a)}</div>
-      <div class="mtroph">🏆 ${a.trophies} · breds ${a.breedCount}</div>
-    </div>`).join('');
+  el.className = 'parent-card filled slot' + slotLetter;
+  el.innerHTML =
+    '<div class="slotlabel">Slot ' + slotLetter + '</div>'
+    + '<div class="genbadge">GEN ' + a.gen + '</div>'
+    + '<div class="axname">' + a.name + '</div>'
+    + '<div class="axclass" style="color:'+c.color+'">'+c.name+' · '+purity(a)+'/6 pure</div>'
+    + '<div class="axpower">PWR '+axiePower(a)+' · breed cost '+breedCost(a)+' SLP</div>'
+    + axieSVG(a, 105)
+    + '<div class="statbars">'+statBarsHTML(a)+'</div>'
+    + '<div class="parts-mini">'+partsChipsHTML(a)+'</div>';
 }
 function renderBreedUI() {
   const a = S.axies.find(x => x.id === S.slotA);
   const b = S.axies.find(x => x.id === S.slotB);
-  const cost = (a && b) ? pairCost(a,b) : 200;
-  document.getElementById('costNote').textContent = cost;
+  const cost = (a && b && a.id !== b.id) ? pairCost(a,b) : null;
+  document.getElementById('costNote').textContent = cost ? cost : '—';
   const chk = canBreed(a, b);
   document.getElementById('breedBtn').disabled = !chk.ok;
   document.getElementById('breedWarn').textContent = chk.ok ? '' : chk.why;
-  document.getElementById('slpBadge').textContent = S.slp;
-  document.getElementById('breedBadge').textContent = S.axies.reduce((n,x)=>n+x.breedCount,0);
-}
-function renderAll() { renderParent('A'); renderParent('B'); renderCollection(); renderBreedUI(); }
-
-function pickAxie(id) {
-  if (S.slotA === id) { S.slotA = null; }
-  else if (S.slotB === id) { S.slotB = null; }
-  else if (!S.slotA) { S.slotA = id; }
-  else if (!S.slotB) { S.slotB = id; }
-  else { S.slotB = id; }
-  save(); renderAll();
 }
 
-/* ================= LEADERBOARD ================= */
+/* ================= RENDER: COLLECTION ================= */
+function renderCollection() {
+  const sortSel = document.getElementById('sortSel');
+  const classSel = document.getElementById('classSel');
+  if (classSel.options.length <= 1) {
+    classSel.innerHTML = '<option value="">All classes</option>' + CLASS_KEYS.map(k=>'<option value="'+k+'">'+CLASSES[k].name+'</option>').join('');
+  }
+  let list = [...S.axies];
+  const cf = classSel.value; if (cf) list = list.filter(a=>a.class===cf);
+  const st = sortSel.value;
+  if (st==='power') list.sort((x,y)=>axiePower(y)-axiePower(x));
+  else if (st==='purity') list.sort((x,y)=>purity(y)-purity(x));
+  else if (st==='trophies') list.sort((x,y)=>y.trophies-x.trophies);
+  else list.sort((x,y)=>y.born-x.born);
+
+  document.getElementById('collCount').textContent = S.axies.length + ' Axies';
+  const el = document.getElementById('collection');
+  el.innerHTML = list.map(a => {
+    const c = CLASSES[a.class], r = rarityOf(a);
+    const isA = a.id===S.slotA, isB = a.id===S.slotB;
+    return '<div class="axmini'+(isA?' selA':'')+(isB?' selB':'')+'" onclick="pickAxie('+a.id+')" title="Click for slot, double-click name for details">'
+      + (isA||isB ? '<span class="mtag">'+(isA&&isB?'A+B':(isA?'A':'B'))+'</span>' : '')
+      + '<span class="mgen">G'+a.gen+'</span>'
+      + axieSVG(a, 84)
+      + '<div class="mname" ondblclick="event.stopPropagation();openDetail('+a.id+')">'+a.name+'</div>'
+      + '<div class="mmeta" style="color:'+c.color+'">'+c.name+' · PWR '+axiePower(a)+'</div>'
+      + '<div class="mtroph">🏆 '+a.trophies+' · ⚔ '+a.wins+' · 💤'+a.breedCount+'</div>'
+      + '<div class="mpurity">'+purity(a)+'/6 pure · <span class="'+r.cls+'" style="border:none;padding:0;background:none">'+r.label+'</span></div>'
+      + '</div>';
+  }).join('');
+}
+
+/* ================= RENDER: LEADERBOARD ================= */
 function renderLB() {
-  const rows = [...S.axies].filter(a => a.parents.length).sort((x,y) => y.trophies - x.trophies || axiePower(y) - axiePower(x)).slice(0, 12);
-  document.getElementById('lbTable').innerHTML = `
-    <tr><th>#</th><th>Axie</th><th>Class</th><th>Power</th><th>Best Stat</th><th>🏆 Trophies</th></tr>
-    ${rows.map((a,i) => `
-      <tr class="${i<3?'top':''}">
-        <td>${i+1}</td>
-        <td><b>${a.name}</b></td>
-        <td style="color:${CLASSES[a.class].color}">${CLASSES[a.class].name}</td>
-        <td class="pwr">${axiePower(a)}</td>
-        <td>${bestStat(a)}</td>
-        <td>🏆 ${a.trophies}</td>
-      </tr>`).join('')}`;
-}
-function bestStat(a) {
-  const e = Object.entries(a.stats).sort((x,y)=>y[1]-x[1])[0];
-  return e[0].toUpperCase() + ' ' + e[1];
+  const rows = [...S.axies].filter(a=>a.parents.length)
+    .sort((x,y)=>y.trophies-x.trophies || axiePower(y)-axiePower(x)).slice(0,15);
+  const medal = i => i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1);
+  document.getElementById('lbTable').innerHTML =
+    '<tr><th>#</th><th>Axie</th><th>Class</th><th>Gen</th><th>Purity</th><th>Power</th><th>⚔ Wins</th><th>🏆</th></tr>'
+    + (rows.length ? rows.map((a,i)=>
+      '<tr class="'+(i<3?'top':'')+'"><td class="'+(i===0?'rank1':'')+'">'+medal(i)+'</td>'
+      +'<td><b>'+a.name+'</b></td>'
+      +'<td style="color:'+CLASSES[a.class].color+'">'+CLASSES[a.class].name+'</td>'
+      +'<td>G'+a.gen+'</td><td>'+purity(a)+'/6</td>'
+      +'<td class="pwr">'+axiePower(a)+'</td><td>'+a.wins+'</td><td>🏆 '+a.trophies+'</td></tr>'
+    ).join('') : '<tr><td colspan="8" style="color:var(--dim);padding:24px;text-align:center">No bred Axies yet — hit the Breed Lab! 🧬</td></tr>');
 }
 
-/* ================= FLOW ================= */
-let pendingChild = null;
-
-function doBreed() {
-  const a = S.axies.find(x => x.id === S.slotA);
-  const b = S.axies.find(x => x.id === S.slotB);
-  const chk = canBreed(a, b);
-  if (!chk.ok) return;
-  const child = breed(a, b);
-  pendingChild = child;
-  S.slp -= pairCost(a, b);
-  save();
-  rollAnimation(child);
-}
-
-function rollAnimation(child) {
-  const bg = document.getElementById('dnaModalBg');
-  const grid = document.getElementById('dnaGrid');
-  grid.innerHTML = PART_SLOTS.map(s => `<div class="dnarow rolling" id="dna-${s}"><span class="slot">${s}</span><span class="val">...</span></div>`).join('');
-  document.getElementById('dnaStatus').textContent = 'Rolling genes...';
-  bg.classList.add('open');
-  PART_SLOTS.forEach((slot, i) => {
-    const el = document.getElementById('dna-' + slot);
-    const spin = setInterval(() => {
-      el.querySelector('.val').textContent = randPart(slot)[0];
-    }, 90);
-    setTimeout(() => {
-      clearInterval(spin);
-      el.classList.remove('rolling'); el.classList.add('locked');
-      el.querySelector('.val').textContent = child.parts[slot];
-    }, 700 + i * 480);
-  });
-  setTimeout(() => {
-    document.getElementById('dnaStatus').innerHTML = `<b style="color:var(--accent2)">${child.name}</b> the ${CLASSES[child.class].name} is born!`;
-  }, 700 + PART_SLOTS.length * 480 + 300);
-  setTimeout(() => {
-    bg.classList.remove('open');
-    showResult(child);
-  }, 700 + PART_SLOTS.length * 480 + 1400);
-}
-
-function showResult(child) {
-  const c = CLASSES[child.class];
-  const bars = ['hp','speed','skill','morale'].map(k =>
-    `<div class="statrow"><div class="lbl">${k.toUpperCase()}</div><div class="bar"><i style="width:${Math.min(100, child.stats[k])}%"></i></div></div>`
+/* ================= RENDER: ACHIEVEMENTS ================= */
+function renderAch() {
+  document.getElementById('achGrid').innerHTML = ACHV.map(a =>
+    '<div class="ach'+(S.achievements[a.id]?' got':'')+'"><div class="ic">'+a.ic+'</div><div class="nm">'+a.nm+'</div><div class="ds">'+a.ds+'<br>+'+a.rw+' SLP</div></div>'
   ).join('');
-  const pts = PART_SLOTS.map(s => `<span class="pt"><b>${child.parts[s]}</b>${partClass(s, child.parts[s])===child.class?' ✦':''}</span>`).join('');
-  document.getElementById('resultTitle').innerHTML = `${child.name} <span style="color:${c.color}">· ${c.name}</span>`;
-  document.getElementById('resultBody').innerHTML = `
-    ${fmtAxie(child)}
-    <div class="statbars" style="max-width:320px;margin:10px auto">${bars}</div>
-    <div class="parts-mini">${pts}</div>
-    <p class="sub" style="margin-top:12px">Power <b class="pwr">${axiePower(child)}</b> · ✦ = part matches class (+6 power each)</p>`;
-  document.getElementById('resultModalBg').classList.add('open');
-  S.axies.push(child);
-  S.slotB = child.id; // conveniently placed for next pairing
-  save(); renderAll();
 }
-function closeResult() { document.getElementById('resultModalBg').classList.remove('open'); }
+
+/* ================= RENDER: ARENA VIEW ================= */
+function renderArenaView() {
+  const el = document.getElementById('arenaPick');
+  el.innerHTML = [...S.axies].sort((x,y)=>axiePower(y)-axiePower(x)).map(a => {
+    const c = CLASSES[a.class], r = rarityOf(a);
+    return '<div class="axmini" onclick="startGauntlet('+a.id+')">'
+      + axieSVG(a, 80)
+      + '<div class="mname">'+a.name+'</div>'
+      + '<div class="mmeta" style="color:'+c.color+'">'+c.name+' · PWR '+axiePower(a)+'</div>'
+      + '<div class="mtroph">🏆 '+a.trophies+' · '+r.label+'</div>'
+      + '</div>';
+  }).join('');
+  const info = document.getElementById('gauntletInfo');
+  info.innerHTML = [0,1,2,3,4].map(i =>
+    '<div class="gstep">Fight '+(i+1)+'<br><small>+'+(i*10)+'% difficulty</small></div>'
+  ).join('');
+}
 
 /* ================= ARENA FLOW ================= */
-function sendToArena() {
-  if (!pendingChild) return;
-  closeResult();
-  S.arena = { axieId: pendingChild.id, fightIdx: 0, wins: 0, busy: false };
-  pendingChild = null;
+function startGauntlet(axieId) {
+  const me = S.axies.find(x=>x.id===axieId); if (!me) return;
+  S.arena = { axieId, fightIdx: 0, wins: 0, busy: true, over: false };
+  save();
   document.getElementById('arenaModalBg').classList.add('open');
+  document.getElementById('fightLog').innerHTML = '';
   runFight();
 }
 function closeArena() {
   document.getElementById('arenaModalBg').classList.remove('open');
-  S.arena = null; save(); renderAll(); renderLB();
+  if (S.arena && S.arena.over) { S.arena = null; }
+  save(); renderAll();
 }
 function arenaNext() {
-  if (!S.arena || S.arena.busy) return;
-  if (S.arena.fightIdx >= 5) { closeArena(); return; }
+  const st = S.arena; if (!st || st.busy) return;
+  if (st.over || st.fightIdx >= 5) { closeArena(); return; }
   runFight();
 }
-function runFight() {
-  const st = S.arena;
-  if (!st) return;
-  st.busy = true;
-  const me = S.axies.find(x => x.id === st.axieId);
-  if (!me) { closeArena(); return; }
-  if (st.fightIdx >= 5) {
-    document.getElementById('arenaSub').innerHTML = `Gauntlet complete: <b>${st.wins}/5 wins</b> — 🏆 ${me.trophies} total`;
-    document.getElementById('fightLog').innerHTML += `<div class="win">— GAUNTLET OVER —</div>`;
-    document.getElementById('arenaNext').textContent = 'Done';
-    st.busy = false; save(); renderAll(); renderLB();
-    return;
+function makeFoe(me, idx) {
+  const cls = pick(CLASS_KEYS);
+  // Foes mirror the player's own stats so fights stay winnable, ramping 0.82x -> 1.14x across 5 rounds.
+  const scale = 0.82 + idx * 0.08;
+  const j = () => Math.random()*10-5;
+  const stats = {
+    hp: Math.max(20, Math.round(me.stats.hp * scale + j())),
+    speed: Math.max(20, Math.round(me.stats.speed * scale + j())),
+    skill: Math.max(15, Math.round(me.stats.skill * scale + j())),
+    morale: Math.max(15, Math.round(me.stats.morale * scale + j())),
+  };
+  const parts = {}; const genes = {};
+  for (const s of PART_SLOTS) { parts[s] = randPart(s)[0]; genes[s] = {d1:parts[s], d2:randPart(s)[0]}; }
+  return { id: -1, name: pick(['Ravager','Stalker','Berserker','Marauder','Wraith','Fang','Howl','Shade','Bruiser']) + '-' + (idx+1), class: cls, parts, genes, stats, gen:0, trophies:0, wins:0, born:0, breedCount:0, parents:[] };
+}
+/* Fatigue: repeated gauntlets on the same Axie pay less, pushing players back to the Breed Lab. */
+function fatigueMult(a) { return Math.max(0.3, 1 - (a.runs || 0) * 0.15); }
+function winReward(a) { return Math.round(40 * fatigueMult(a)); }
+function fightSim(me, foe) {
+  const events = [];
+  let meHp = me.stats.hp * 6, foeHp = foe.stats.hp * 6;
+  const meMax = meHp, foeMax = foeHp;
+  const order = me.stats.speed >= foe.stats.speed ? [me,foe] : [foe,me];
+  let turn = 1;
+  const strike = (atk, def) => {
+    const isMe = atk === me;
+    let dmg = (atk.stats.skill * 0.95 + 10) * (0.8 + Math.random()*0.5);
+    const crit = Math.random() < atk.stats.morale / 240;
+    if (crit) dmg *= 1.7;
+    dmg = Math.max(1, Math.round(dmg));
+    if (isMe) foeHp -= dmg; else meHp -= dmg;
+    events.push({ type: isMe ? 'mhit' : 'fhit', dmg, crit, atk: atk.name, turn });
+  };
+  while (meHp > 0 && foeHp > 0 && turn <= 12 && events.length < 60) {
+    for (const atk of order) { if (meHp <= 0 || foeHp <= 0) break; strike(atk, atk === me ? foe : me); }
+    turn++;
   }
-  document.getElementById('arenaNext').textContent = 'Skip';
-  const foe = challenger(arenaOpponentPower(axiePower(me), st.fightIdx));
-  document.getElementById('arenaSub').innerHTML = `Fight ${st.fightIdx+1}/5 · ${me.name} <b style="color:${CLASSES[me.class].color}">PWR ${axiePower(me)}</b> vs ${foe.name} (${CLASSES[foe.class].name})`;
+  const win = foeHp <= 0 && meHp > 0;
+  return { events, win, meMax, foeMax };
+}
+function runFight() {
+  const st = S.arena; if (!st) return;
+  const me = S.axies.find(x=>x.id===st.axieId); if (!me) { closeArena(); return; }
+  st.busy = true;
+  if (st.fightIdx >= 5) { finishGauntlet(); return; }
+  const foe = makeFoe(me, st.fightIdx);
+  const rw = winReward(me);
+  document.getElementById('arenaSub').innerHTML = me.name + ' — Gauntlet run · <b style="color:var(--accent2)">' + st.wins + ' wins</b> · reward <b style="color:var(--gold)">' + rw + ' SLP</b>/win' + ((me.runs||0) > 0 ? ' <span style="color:var(--dim)">(run ' + ((me.runs||0)+1) + ', fatigue -' + Math.round((1-fatigueMult(me))*100) + '%)</span>' : '');
+  renderArenaSteps();
+  const scene = document.getElementById('battleScene');
+  scene.innerHTML =
+    '<div class="fighter" id="fMe">'+axieSVG(me,100)+'<div class="fname">'+me.name+'</div><div class="fclass" style="color:'+CLASSES[me.class].color+'">PWR '+axiePower(me)+'</div><div class="hpbarr"><i id="meHpBar" style="width:100%"></i></div><div class="hpnum" id="meHpNum"></div></div>'
+    + '<div class="vs-badge">VS</div>'
+    + '<div class="fighter" id="fFoe">'+axieSVG(foe,100)+'<div class="fname">'+foe.name+'</div><div class="fclass" style="color:'+CLASSES[foe.class].color+'">PWR ~'+(foe.stats.hp+foe.stats.speed+foe.stats.skill+foe.stats.morale)+'</div><div class="hpbarr"><i id="foeHpBar" style="width:100%"></i></div><div class="hpnum" id="foeHpNum"></div></div>';
   const log = document.getElementById('fightLog');
   log.innerHTML = '';
+  document.getElementById('arenaNext').textContent = 'Skip';
   const res = fightSim(me, foe);
-  res.lines.forEach((l, i) => {
+  let meHp = me.stats.hp*6, foeHp = foe.stats.hp*6;
+  const step = 420;
+  res.events.forEach((e, i) => {
     setTimeout(() => {
-      const div = document.createElement('div');
-      div.className = l.t === 'me' ? 'hit' : '';
-      div.textContent = l.txt;
-      log.appendChild(div); log.scrollTop = log.scrollHeight;
-    }, i * 380);
+      if (e.type === 'mhit') {
+        foeHp -= e.dmg;
+        document.getElementById('foeHpBar').style.width = Math.max(0, 100*foeHp/res.foeMax) + '%';
+        document.getElementById('foeHpNum').textContent = Math.max(0, Math.round(foeHp)) + ' HP';
+        shake('fFoe'); floatDmg('fFoe', e.dmg, e.crit);
+        log.innerHTML += '<div class="f-hit">T'+e.turn+' ▶ '+me.name+' hits '+foe.name+' for <b>'+e.dmg+'</b>'+(e.crit?' <span class="f-crit">CRIT!</span>':'')+'</div>';
+        e.crit ? Snd.crit() : Snd.hit();
+      } else {
+        meHp -= e.dmg;
+        document.getElementById('meHpBar').style.width = Math.max(0, 100*meHp/res.meMax) + '%';
+        document.getElementById('meHpNum').textContent = Math.max(0, Math.round(meHp)) + ' HP';
+        shake('fMe'); floatDmg('fMe', e.dmg, e.crit);
+        log.innerHTML += '<div class="f-foe">T'+e.turn+' ◀ '+foe.name+' hits '+me.name+' for '+e.dmg+(e.crit?' CRIT!':'')+'</div>';
+        Snd.hit();
+      }
+      log.scrollTop = log.scrollHeight;
+    }, i * step);
   });
   setTimeout(() => {
-    const div = document.createElement('div');
     if (res.win) {
-      me.trophies += 3; S.slp += 15; st.wins++;
-      div.className = 'win'; div.textContent = `✅ ${me.name} WINS! +3 trophies, +15 SLP`;
+      const rw = winReward(me);
+      me.trophies += 3; me.wins += 1; S.slp += rw; S.totalWins += 1; st.wins += 1;
+      bumpQuest('_wins', 1); bumpQuest('_slp', rw);
+      log.innerHTML += '<div class="f-win">✅ '+me.name+' WINS — +3 🏆 +'+rw+' SLP</div>';
+      Snd.win();
+      toast('⚔️ Victory!', me.name+' defeated '+foe.name+' · +3🏆 +'+rw+' SLP', 'green');
     } else {
-      div.className = 'lose'; div.textContent = `❌ ${foe.name} wins this one. No trophies lost.`;
+      log.innerHTML += '<div class="f-lose">❌ '+foe.name+' takes this one — no losses, try again</div>';
+      Snd.lose();
     }
-    log.appendChild(div); log.scrollTop = log.scrollHeight;
     st.fightIdx++;
-    document.getElementById('arenaNext').textContent = st.fightIdx >= 5 ? 'Finish' : 'Next Fight';
-    st.busy = false; save(); renderAll();
-  }, res.lines.length * 380 + 500);
+    log.scrollTop = log.scrollHeight;
+    renderArenaSteps();
+    const next = document.getElementById('arenaNext');
+    if (st.fightIdx >= 5) { next.textContent = 'Finish'; st.busy = false; save(); renderAll(); checkAchievements(); }
+    else { next.textContent = 'Next Fight'; st.busy = false; save(); renderAll(); checkAchievements(); }
+  }, res.events.length * step + 600);
 }
+function finishGauntlet() {
+  const st = S.arena;
+  const me = S.axies.find(x=>x.id===st.axieId);
+  if (!me) { closeArena(); return; }
+  const sweepReward = Math.round(60 * fatigueMult(me));
+  if (st.wins === 5) {
+    me.trophies += 10; S.slp += sweepReward;
+    S.achievements._swept = true;
+    bumpQuest('_slp', sweepReward);
+    bumpQuest('_wins', 5);
+    toast('⚡ GAUNTLET SWEEP!', me.name+' wins all 5 — +10 🏆 +'+sweepReward+' SLP', 'gold');
+    Snd.reveal();
+  } else if (st.wins >= 3) {
+    const bonus = Math.round(15*st.wins);
+    toast('⚔️ Gauntlet done', me.name+' went '+st.wins+'/5 — +'+bonus+' SLP bonus', 'green');
+    S.slp += bonus;
+    bumpQuest('_slp', bonus);
+  }
+  if (me.runs) me.runs++; else me.runs = 1;
+  st.over = true;
+  document.getElementById('arenaSub').innerHTML = 'Gauntlet complete — <b style="color:var(--accent2)">'+st.wins+'/5 wins</b> — ' + me.name + ' now at 🏆 ' + me.trophies;
+  document.getElementById('fightLog').innerHTML += '<div class="f-win">— GAUNTLET OVER · '+st.wins+'/5 · '+me.name+' now at 🏆 '+me.trophies+' · fatigue '+(100-Math.round(fatigueMult(me)*100))+'% —</div>';
+  document.getElementById('arenaNext').textContent = 'Done';
+  st.busy = false;
+  save(); renderAll(); checkAchievements(); renderQuests();
+}
+function renderArenaSteps() {
+  const st = S.arena; if (!st) return;
+  document.getElementById('arenaSteps').innerHTML = [0,1,2,3,4].map(i =>
+    '<div class="gstep'+(i<st.fightIdx?(i < st.wins ? ' won':'lost'):'')+'">'+(i<st.fightIdx ? (i < st.wins ? '✅' : '❌') : '⚔️')+' Fight '+(i+1)+'</div>'
+  ).join('');
+}
+function shake(id) { const el = document.getElementById(id); if (!el) return; el.classList.remove('shaking'); void el.offsetWidth; el.classList.add('shaking'); }
+function floatDmg(id, dmg, crit) {
+  const el = document.getElementById(id); if (!el) return;
+  const d = document.createElement('div');
+  d.className = 'dmgfloat' + (crit ? ' crit' : '');
+  d.textContent = '-' + dmg + (crit ? '!' : '');
+  el.appendChild(d);
+  setTimeout(()=>d.remove(), 1000);
+}
+
+/* ================= BREED FLOW ================= */
+function pickAxie(id) {
+  Snd.click();
+  if (S.slotA === id) S.slotA = null;
+  else if (S.slotB === id) S.slotB = null;
+  else if (!S.slotA) S.slotA = id;
+  else if (!S.slotB) S.slotB = id;
+  else S.slotB = id;
+  save(); renderAll();
+}
+function autoPick() {
+  const cands = S.axies.filter(a => a.breedCount < 7);
+  let best = null, bestScore = -1;
+  for (let i = 0; i < cands.length; i++) for (let j = i+1; j < cands.length; j++) {
+    const a = cands[i], b = cands[j];
+    if (areBloodBlocked(a,b)) continue;
+    if (pairCost(a,b) > S.slp) continue;
+    const score = (purity(a)+purity(b))*3 + (axiePower(a)+axiePower(b))/40 + Math.random();
+    if (score > bestScore) { bestScore = score; best = [a,b]; }
+  }
+  if (!best) { toast('✨ Auto-pick', 'No valid affordable pair found', 'red'); Snd.err(); return; }
+  S.slotA = best[0].id; S.slotB = best[1].id;
+  Snd.click(); save(); renderAll();
+  toast('✨ Auto-picked', best[0].name + ' × ' + best[1].name, '');
+}
+function doBreed() {
+  const a = S.axies.find(x=>x.id===S.slotA);
+  const b = S.axies.find(x=>x.id===S.slotB);
+  if (!canBreed(a,b).ok) { Snd.err(); return; }
+  S.slp -= pairCost(a,b);
+  const child = breed(a,b);
+  S.totalBreeds += 1;
+  bumpQuest('_breeds', 1);
+  if (child._mutations) S.totalMutations += child._mutations;
+  pendingChild = child;
+  save(); renderHeader(); renderBreedUI();
+  rollAnimation(child);
+}
+function rollAnimation(child) {
+  const bg = document.getElementById('dnaModalBg');
+  const grid = document.getElementById('dnaGrid');
+  grid.innerHTML = PART_SLOTS.map(s =>
+    '<div class="dnarow rolling" id="dna-'+s+'"><span class="slot">'+s+'</span><span class="val">···</span></div>'
+  ).join('');
+  document.getElementById('dnaStatus').textContent = 'Rolling genes...';
+  bg.classList.add('open');
+  PART_SLOTS.forEach((slot, i) => {
+    const el = document.getElementById('dna-'+slot);
+    const spin = setInterval(() => {
+      el.querySelector('.val').textContent = randPart(slot)[0];
+      Snd.tick();
+    }, 95);
+    setTimeout(() => {
+      clearInterval(spin);
+      el.classList.remove('rolling'); el.classList.add('locked');
+      el.querySelector('.val').textContent = child.parts[slot];
+      Snd.lock();
+    }, 700 + i * 460);
+  });
+  const totalT = 700 + PART_SLOTS.length * 460 + 300;
+  setTimeout(() => {
+    document.getElementById('dnaStatus').innerHTML = '✨ <b style="color:var(--accent2)">'+child.name+'</b> is born!';
+    Snd.reveal();
+  }, totalT);
+  setTimeout(() => { bg.classList.remove('open'); showResult(child); }, totalT + 1300);
+}
+function showResult(child) {
+  S.axies.push(child);
+  S.slotB = child.id;
+  const c = CLASSES[child.class], r = rarityOf(child);
+  const mutNote = child._mutations ? ' · <span style="color:var(--red)">🧪 '+child._mutations+' mutation'+(child._mutations>1?'s':'')+'!</span>' : '';
+  document.getElementById('resultTitle').innerHTML = child.name + ' <span style="color:'+c.color+'">· '+c.name+'</span>';
+  document.getElementById('resultBody').innerHTML =
+    '<span class="raritytag '+r.cls+'">'+r.label+'</span>'
+    + axieSVG(child, 120)
+    + '<div class="statbars" style="max-width:320px;margin:8px auto 4px">'+statBarsHTML(child)+'</div>'
+    + '<div class="parts-mini">'+partsChipsHTML(child)+'</div>'
+    + '<p class="sub" style="margin-top:10px">GEN '+child.gen+' · PWR <span class="pwr">'+axiePower(child)+'</span> · '+purity(child)+'/6 pure'+mutNote+'</p>'
+    + '<p class="sub" style="font-size:11.5px">✦ = part matches class (+6 power each). This Axie is now in <b>Slot B</b> — breed again or send to the Arena.</p>';
+  document.getElementById('resultModalBg').classList.add('open');
+  save(); renderAll(); checkAchievements(); renderQuests();
+}
+function closeResult() { document.getElementById('resultModalBg').classList.remove('open'); }
+function sendToArena() {
+  const child = pendingChild || (S.axies.length ? S.axies[S.axies.length-1] : null);
+  pendingChild = null;
+  closeResult();
+  if (!child) return;
+  switchTab('arena');
+  startGauntlet(child.id);
+}
+
+/* ================= DETAIL MODAL ================= */
+function openDetail(id) {
+  const a = S.axies.find(x=>x.id===id); if (!a) return;
+  const c = CLASSES[a.class], r = rarityOf(a);
+  const findName = pid => { const p = S.axies.find(x=>x.id===pid); return p ? '<b>'+p.name+'</b> ('+CLASSES[p.class].name+')' : '<span class="gone">unknown ancestor</span>'; };
+  const parentHTML = a.parents.length
+    ? ' 👤 ' + a.parents.map(findName).join(' + ')
+    : ' <span class="gone">wild starter (no lineage)</span>';
+  const grandHTML = (() => {
+    const gps = [];
+    for (const pid of a.parents) {
+      const p = S.axies.find(x=>x.id===pid);
+      if (p && p.parents.length) gps.push(...p.parents);
+    }
+    return gps.length ? '<br>Grandparents: ' + gps.map(findName).join(' · ') : '';
+  })();
+  const genesTable = '<table class="genes-table"><tr><th>Slot</th><th>Active gene (d1)</th><th>Hidden (d2)</th></tr>'
+    + PART_SLOTS.map(s => {
+      const match = partClass(s, a.parts[s]) === a.class;
+      const d2cls = partClass(s, a.genes[s].d2) === a.class ? ' match' : '';
+      return '<tr><td style="color:var(--dim);text-transform:uppercase;font-size:10px;letter-spacing:1px">'+s+'</td>'
+        +'<td><span class="genechip active'+(match?' match':'')+'">'+a.parts[s]+(match?' ✦':'')+'</span></td>'
+        +'<td><span class="genechip'+d2cls+'">'+a.genes[s].d2+'</span></td></tr>';
+    }).join('') + '</table>';
+  document.getElementById('detailBody').innerHTML =
+    '<div class="detail-grid">'
+    + '<div class="center">'+axieSVG(a,140)+'<br><span class="raritytag '+r.cls+'">'+r.label+'</span></div>'
+    + '<div>'
+      + '<h3>'+a.name+'</h3>'
+      + '<p class="sub" style="margin-bottom:8px"><span style="color:'+c.color+';font-weight:700">'+c.name+'</span> · GEN '+a.gen+' · PWR <span class="pwr">'+axiePower(a)+'</span> · '+purity(a)+'/6 pure</p>'
+      + '<div class="statbars">'+statBarsHTML(a)+'</div>'
+      + '<p class="sub" style="margin-top:10px;font-size:12px">🏆 '+a.trophies+' trophies · ⚔ '+a.wins+' wins · 💤 bred '+a.breedCount+'× (next: '+breedCost(a)+' SLP)</p>'
+      + '<h4 style="margin:14px 0 6px;font-size:13px">🧬 Genes</h4>'
+      + genesTable
+      + '<h4 style="margin:14px 0 6px;font-size:13px">🌳 Family tree</h4>'
+      + '<div class="ftree">'+parentHTML+grandHTML+'</div>'
+      + '<div class="btnrow" style="flex-wrap:wrap">'
+        + '<button class="b-secondary" style="flex:1;min-width:120px" onclick="closeDetail()">Close</button>'
+        + '<button class="b-secondary" style="flex:1;min-width:120px" onclick="closeDetail();pickAxie('+a.id+')">Load Slot</button>'
+        + (a.parents.length ? '<button class="b-danger" onclick="confirmRelease('+a.id+')" style="background:rgba(255,92,122,.12);color:var(--red);border:1px solid rgba(255,92,122,.4)!important;flex:1;min-width:120px">Release +'+releaseValue(a)+' SLP</button>' : '')
+      + '</div>'
+    + '</div></div>';
+  document.getElementById('detailModalBg').classList.add('open');
+}
+function closeDetail() { document.getElementById('detailModalBg').classList.remove('open'); }
+function confirmRelease(id) {
+  const a = S.axies.find(x=>x.id===id); if (!a) return;
+  const kids = S.axies.filter(x=>x.parents.includes(id)).length;
+  const msg = kids
+    ? 'Release '+a.name+' for '+releaseValue(a)+' SLP?\n\nNote: '+kids+' of its children keep this bloodline record.'
+    : 'Release '+a.name+' for '+releaseValue(a)+' SLP?';
+  if (!window.confirm(msg)) return;
+  S.slp += releaseValue(a);
+  S.axies = S.axies.filter(x=>x.id!==id);
+  if (S.slotA===id) S.slotA = null;
+  if (S.slotB===id) S.slotB = null;
+  if (S.arena && S.arena.axieId===id) S.arena = null;
+  closeDetail();
+  Snd.cash();
+  toast('👋 Released', a.name+' set free · +'+releaseValue(a)+' SLP', 'green');
+  save(); renderAll(); checkAchievements();
+}
+
+/* ================= SETTINGS / QUESTS / WELCOME ================= */
+function openSettings() {
+  document.getElementById('soundToggle').className = 'toggle' + (S.settings.sound ? ' on' : '');
+  document.getElementById('settingsModalBg').classList.add('open');
+}
+function closeSettings() { document.getElementById('settingsModalBg').classList.remove('open'); }
+function toggleSound() {
+  S.settings.sound = !S.settings.sound;
+  document.getElementById('soundToggle').className = 'toggle' + (S.settings.sound ? ' on' : '');
+  save(); if (S.settings.sound) Snd.click();
+}
+function resetSave() {
+  if (!window.confirm('Wipe ALL progress — every Axie, SLP, trophy, achievement?\n\nThis cannot be undone.')) return;
+  localStorage.removeItem(SAVE_KEY);
+  S = null; load(); save();
+  closeSettings(); renderAll();
+  toast('💀 Progress reset', 'Fresh start — 2 new starters + 1000 SLP', 'red');
+}
+function replayTutorial() { closeSettings(); S.seenWelcome = false; save(); showWelcome(); }
+function openQuests() { ensureQuests(); renderQuests(); document.getElementById('questsModalBg').classList.add('open'); }
+function closeQuests() { document.getElementById('questsModalBg').classList.remove('open'); }
+function showWelcome() { document.getElementById('welcomeModalBg').classList.add('open'); }
+function closeWelcome() { document.getElementById('welcomeModalBg').classList.remove('open'); S.seenWelcome = true; save(); }
 
 /* ================= TABS ================= */
 function switchTab(t) {
-  for (const v of ['breed','lb','guide']) document.getElementById('view-' + v).style.display = 'none';
-  for (const b of ['tabBreed','tabLb','tabGuide']) document.getElementById(b).classList.remove('active');
-  document.getElementById('view-' + t).style.display = 'block';
-  document.getElementById('tab' + (t==='lb'?'Lb':t==='guide'?'Guide':'Breed')).classList.add('active');
+  for (const v of ['breed','arena','lb','ach','guide']) { const el = document.getElementById('view-'+v); if (el) el.style.display = 'none'; }
+  for (const b of ['Breed','Arena','Lb','Ach','Guide']) { const el = document.getElementById('tab'+b); if (el) el.classList.remove('active'); }
+  document.getElementById('view-'+t).style.display = 'block';
+  const tabEl = { breed:'tabBreed', arena:'tabArena', lb:'tabLb', ach:'tabAch', guide:'tabGuide' }[t];
+  document.getElementById(tabEl).classList.add('active');
   if (t === 'lb') renderLB();
+  if (t === 'ach') renderAch();
+  if (t === 'arena') renderArenaView();
+  Snd.click();
 }
 
+/* ================= MASTER RENDER ================= */
+function renderAll() {
+  renderHeader();
+  renderParent('A'); renderParent('B');
+  renderBreedUI();
+  renderCollection();
+  renderLB(); renderAch(); renderArenaView();
+}
+
+/* ================= KEYBOARD ================= */
+document.addEventListener('keydown', e => {
+  if (e.target && ['INPUT','SELECT','TEXTAREA'].includes(e.target.tagName)) return;
+  const anyModal = document.querySelector('.modalbg.open');
+  if (e.key === 'Escape') {
+    if (anyModal) { if (anyModal.id !== 'dnaModalBg' && anyModal.id !== 'arenaModalBg') anyModal.classList.remove('open'); }
+    return;
+  }
+  if (anyModal) return;
+  if (e.key === 'b' || e.key === 'B') { if (!document.getElementById('breedBtn').disabled) { switchTab('breed'); doBreed(); } }
+  if (e.key === 'a' || e.key === 'A') autoPick();
+});
+
+document.addEventListener('click', () => Snd.init(), { once: true, capture: true });
+document.addEventListener('keydown', () => Snd.init(), { once: true, capture: true });
+
 /* ================= BOOT ================= */
-load();
-renderAll();
-renderLB();
+(function boot() {
+  load();
+  ensureQuests();
+  renderAll();
+  renderQuests();
+  const splash = document.getElementById('splash');
+  setTimeout(() => {
+    splash.classList.add('hide');
+    if (!S.seenWelcome) showWelcome();
+  }, 1300);
+  save();
+})();
 </script>
 </body>
 </html>
